@@ -1,0 +1,20 @@
+/Geometry/Next100/pressure 10. bar
+/Geometry/Next100/elfield false
+
+/Generator/SingleParticle/particle geantino
+/Generator/SingleParticle/min_energy 1 eV
+/Generator/SingleParticle/max_energy 1 eV
+/Generator/SingleParticle/region ACTIVE
+
+/PhysicsList/Nexus/clustering           false
+/PhysicsList/Nexus/drift                false
+/PhysicsList/Nexus/electroluminescence  false
+/PhysicsList/Nexus/photoelectric        false
+
+/nexus/persistency/output_file ICS_test
+
+/process/em/verbose 0
+
+/run/verbose 0
+/event/verbose 0
+/tracking/verbose 0
