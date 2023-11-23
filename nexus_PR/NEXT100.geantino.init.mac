@@ -21,4 +21,5 @@
 /nexus/RegisterSteppingAction SaveAllSteppingAction
 /nexus/RegisterRunAction DefaultRunAction
 
-/nexus/RegisterMacro macros/NEXT100.geantino.config.mac
+/nexus/RegisterMacro ../extra_file/NEXT100.geantino.config.mac
+

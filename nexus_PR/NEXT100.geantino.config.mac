@@ -16,9 +16,9 @@
 /Generator/SingleParticle/max_energy 1 keV
 /Generator/SingleParticle/region AD_HOC
 #/Geometry/Next100/specific_vertex 340 -340 1160 mm
-/Geometry/Next100/specific_vertex 0 0 1180 mm
+/Geometry/Next100/specific_vertex 0 0 1420 mm
 
-/Generator/SingleParticle/momentum 0 0 50
+/Generator/SingleParticle/momentum 0 50 0
 
 # ACTIONS
 #/Actions/SaveAllSteppingAction/select_particle geantino
@@ -33,3 +33,4 @@
 /control/execute macros/geometries/NEXT100DefaultVisibility.mac
 
 /nexus/persistency/output_file geantinos.next
+
