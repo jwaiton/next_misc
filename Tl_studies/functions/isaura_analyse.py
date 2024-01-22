@@ -270,12 +270,10 @@ def remove_low_E_events(df, energy_limit = 0.05):
     condition = (tracks_test.energy < energy_limit)
     summed_df = tracks_test[condition].groupby('event')['energy'].sum().reset_index()
 
-    # merge these as a new column
-    merged_df = pd.merge(tracks_test, summed_df, on='event', suffixes=('', '_sum'))
-
+     # merge these as a new column
+    merged_df = pd.merge(tracks_test, summed_df, on='event', suffixes=('', '_sum'), how = 'left').fillna(0)
     # add this summed energy to first column
-    merged_df['energy'] += merged_df['energy_sum'].where(merged_df.groupby('event').cumcount() == 0, 0)
-    #merged_df['energy'] = merged_df.apply(lambda row: (row['energy'] + row['energy_sum']) if row.name == merged_df[merged_df['event'] == row['event']].index[0] else row['energy'], axis=1)
+    merged_df['energy'] = merged_df.apply(lambda row: (row['energy'] + row['energy_sum']) if row.name == merged_df[merged_df['event'] == row['event']].index[0] else row['energy'], axis=1)
 
     # drop energy sum column
     result_df = merged_df.drop('energy_sum', axis = 1)
