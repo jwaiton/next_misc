@@ -3,7 +3,7 @@
 
 import sys,os,os.path
 
-sys.path.append("../../")   # cite IC from parent directory
+sys.path.append("../../../")   # cite IC from parent directory
                             # NOTE if you can't import IC stuff, its because of the
                             # above line
 #sys.path.append(os.path.expanduser('~/code/eol_hsrl_python'))
@@ -190,6 +190,9 @@ def len_events(df):
 
 # useful to normalize histograms
 def get_weights(data, norm):
+    '''
+    Function useful for normalising histograms
+    '''
     if norm:
         return np.repeat(1.0/len(data), len(data))
     else:
@@ -197,7 +200,9 @@ def get_weights(data, norm):
 
 
 def plot_volume_hists(df):
-
+    '''
+    Function used for plotting a dataframe's distribution throughout x,y,z
+    '''
     plot_hist(df, column = 'x_min', output = False, label = 'x_min', fill = False, x_label = 'position (mm)')
     plot_hist(df, column = 'x_max', title = 'x plot for full volume', output = False, label = 'x_max', fill = False, x_label = 'position (mm)')
     plt.legend(loc='upper left')
@@ -1006,3 +1011,13 @@ def load_tracks(data_path, filter = 0):
     return tracks
 
 
+def double_event_id(df):
+    '''
+    Doubles the event_id of a dataframe passed to it.
+    This is useful for when the nexus mapping and the IC mapping is different
+    by exactly a half.
+    '''
+
+    df['event_id'] = df['event_id'] * 2
+
+    return df
