@@ -301,7 +301,7 @@ def apply_cuts_raw(tracks, e_low_cut = 0.05, fid_lower_z = 20, fid_upper_z = 119
     Apply all relevant cuts and spit out dataframe at the end
     The most barebones version, no efficiency calcs, it just spits out the dataframe
     '''
-
+    print("Start events: {}".format(tracks['event'].nunique()))
 
     # Low energy tracks, make this function work better. It seems busted currently
     low_e_cut_tracks = isa.remove_low_E_events(tracks, energy_limit = e_low_cut)
@@ -318,6 +318,9 @@ def apply_cuts_raw(tracks, e_low_cut = 0.05, fid_lower_z = 20, fid_upper_z = 119
 
     # energy cuts
     ecut_rel = isa.energy_cuts(ovlp_rel, lower_e = e_lower, upper_e = e_upper)
+
+    print("End events: {}".format(ecut_rel['event'].nunique()))
+
 
     # return it
     return ecut_rel
