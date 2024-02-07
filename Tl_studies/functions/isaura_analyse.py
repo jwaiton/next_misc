@@ -1024,3 +1024,21 @@ def double_event_id(df):
     df['event_id'] = df['event_id'] * 2
 
     return df
+
+
+def event_range(file_path):
+    '''
+    Opens a h5 file and tells you the event range within it (not MC events).
+    This is for sophronia at the moment, adapt later for more cities
+    '''
+    
+    # collect data
+    df = dstio.load_dst(file_path, 'RECO', 'Events')
+
+    # read event numbers
+    array = df['event'].to_numpy()
+    min_event = min(array)
+    max_event = max(array)
+
+    print("Event range: {} - {}".format(min_event, max_event))
+
