@@ -15,6 +15,7 @@ Tl_studies/sophronia/sophronia_qthr3.h5
 Tl_studies/functions/__pycache__/isaura_analyse.cpython-38.pyc
 Tl_studies/beersheba_parameter_testing/beersheba_event_plots/*
 Tl_studies/beersheba_parameter_testing/fast_plots/*
+Tl_studies/beersheba_parameter_testing/q_thr_cut_plots/*
 *.h5
 0nubb_LPR/5_bar/*
 0nubb_LPR/configs/*

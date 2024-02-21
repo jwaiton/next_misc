@@ -182,10 +182,10 @@ def hitc_to_df_(hitc):
         columns["Ep"      ].append(hit .Ep)
     return pd.DataFrame(columns)
 
-def soph_to_lowTh(df, threshold = 5):
+def soph_to_lowTh(df, threshold = 5, verbose = True):
     '''
     Converts sophronia 'RECO/Events' to lowTh events via a rather convoluted process
-
+    Made by me (John Waiton), so dont treat it like a normal function from IC!
     ------
     Parameters
     ------
@@ -215,15 +215,16 @@ def soph_to_lowTh(df, threshold = 5):
 
     # collect the keys as the event numbers
     soph_hitc_list = list(soph_hitc.keys())
-
-    print("Processing data...")
+    if (verbose == True):
+        print("Processing data...")
     # loop over all of these events
     j = 0
     for i in soph_hitc_list:
         j += 1
 
-        if (len(soph_hitc_list)%j == 50): 
-            print("{}/{}".format(j, len(soph_hitc_list)))
+        if (verbose == True):
+            if (len(soph_hitc_list)%j == 50): 
+                print("{}/{}".format(j, len(soph_hitc_list)))
         # choose i'th event
         soph_hit_event = soph_hitc.get(i)
 
