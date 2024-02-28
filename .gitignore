@@ -21,4 +21,6 @@ Tl_studies/beersheba_parameter_testing/q_thr_cut_plots/*
 0nubb_LPR/configs/*
 0nubb_LPR/sophronia/sophronia_plots/*
 0nubb_LPR/sophronia/sophronia_plots_mu/*
+Tl_studies/sophronia_2us/*.conf
+Tl_studies/sophronia/*.conf
 Tl_studies/beersheba_parameter_testing/q_thr_cut_plots/DECONV_MC_5x3.png
