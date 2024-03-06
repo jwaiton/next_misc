@@ -239,7 +239,6 @@ def read_MC_tracks(folder_path):
     # return 
     return (tracks, particles)
 
-
 def remove_low_E_events(df, energy_limit = 0.05):
     '''
     Remove low energy tracks, add their energy back to the first
@@ -252,12 +251,10 @@ def remove_low_E_events(df, energy_limit = 0.05):
     condition = (tracks_test.energy < energy_limit)
     summed_df = tracks_test[condition].groupby('event')['energy'].sum().reset_index()
 
-    # merge these as a new column
-    merged_df = pd.merge(tracks_test, summed_df, on='event', suffixes=('', '_sum'))
-
+     # merge these as a new column
+    merged_df = pd.merge(tracks_test, summed_df, on='event', suffixes=('', '_sum'), how = 'left').fillna(0)
     # add this summed energy to first column
-    merged_df['energy'] += merged_df['energy_sum'].where(merged_df.groupby('event').cumcount() == 0, 0)
-    #merged_df['energy'] = merged_df.apply(lambda row: (row['energy'] + row['energy_sum']) if row.name == merged_df[merged_df['event'] == row['event']].index[0] else row['energy'], axis=1)
+    merged_df['energy'] = merged_df.apply(lambda row: (row['energy'] + row['energy_sum']) if row.name == merged_df[merged_df['event'] == row['event']].index[0] else row['energy'], axis=1)
 
     # drop energy sum column
     result_df = merged_df.drop('energy_sum', axis = 1)
@@ -273,6 +270,7 @@ def remove_low_E_events(df, energy_limit = 0.05):
     remove_low_E['numb_of_tracks'] = remove_low_E['event'].map(event_counts)
 
     return remove_low_E
+
 
 
 def apply_cuts_raw(tracks, e_low_cut = 0.05, fid_lower_z = 20, fid_upper_z = 1195, fid_r_lim = 472, e_lower = 1.35, e_upper = 1.9):
