@@ -523,6 +523,14 @@ def process_data(path):
                              'Single Cut Efficiency': abs_cut_effics
                              })
 
+    # adding exception in for when there's no data in ecut_rel
+    if (len(ecut_rel.index) == 0):
+            efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', 0, len(ecut_rel), 0]
+            efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', 0, 0, 0]
+            efficiencies.to_csv(str(folder_path) + 'output/efficiency.csv')
+            print("No events left in ROI... jobs done!")
+            return 0
+
     plot_hist(ecut_rel, column = 'energy', output= False, binning = 20, title = "cut_hist",
                 fill = True, data = False, save = True, save_dir = str(folder_path) + 'output/', log = False)
 
