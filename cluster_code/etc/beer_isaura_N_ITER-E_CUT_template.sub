@@ -1,0 +1,21 @@
+executable      = bin/config_beer_isau_template.sh 
+request_memory  = 512M
+request_cpus    = 1
+request_disk    = 5G
+initialdir	= $ENV(HOME)/scripts
+
+ITER=105
+E_CUT=7e-3
+
+output          = out/beerisaura_LPR.$(ClusterId)-$(Process)-$(ITER)-$(E_CUT).out
+error           = out/beerisaura_LPR.$(ClusterId)-$(Process)-$(ITER)-$(E_CUT).err
+log             = out/beerisaura_LPR.$(ClusterId)-$(Process).$(ITER)-$(E_CUT).log
+arguments = $(Process) $(ITER) $(E_CUT)
+
+max_idle = 100
+
+should_transfer_files = yes
+when_to_transfer_output = ON_EXIT
+
+queue 300
+
