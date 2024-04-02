@@ -588,6 +588,9 @@ def process_data(path):
 
     print("Jobs done!")
 
+    # Save the data to a h5 file
+    ecut_rel.to_hdf(str(folder_path) + 'output/post_cuts.h5', key='cut_data', mode = 'w')
+
 
 
 # set folder_path here!
