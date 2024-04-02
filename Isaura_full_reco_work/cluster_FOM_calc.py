@@ -1,8 +1,8 @@
 import sys,os,os.path
 
-sys.path.append("../../")   # cite IC from parent directory
-#sys.path.append(os.path.expanduser('~/code/eol_hsrl_python'))
-os.environ['ICTDIR']='/home/e78368jw/Documents/NEXT_CODE/IC'
+sys.path.append("/gluster/data/next/software/IC_sophronia")   # cite IC from parent directory
+sys.path.append(os.path.expanduser('~/code/eol_hsrl_python'))
+os.environ['ICTDIR']='/gluster/data/next/software/IC_sophronia/IC'
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,6 +16,8 @@ from    IC.invisible_cities.core.core_functions   import shift_to_bin_centers
 import scipy.special as special
 from scipy.stats import skewnorm
 from scipy.optimize import curve_fit
+
+
 
 
 ###
@@ -62,7 +64,9 @@ def plot_hist(df, column = 'energy', binning = 20, title = "Energy plot", output
 
 
 def load_data(folder_path):
-    file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+    file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f.endswith('.h5')]
+    
+    # remove any files that dont end in h5
 
     # NOTE Break this section up, its annoying like this.
     dfs = []
@@ -196,6 +200,7 @@ def energy_cuts(df, lower_e = 1.5, upper_e = 1.7, verbose = False):
 
     return filt_e_df
 
+
 def remove_low_E_events(df, energy_limit = 0.05):
     '''
     Remove low energy tracks, add their energy back to the first
@@ -208,12 +213,10 @@ def remove_low_E_events(df, energy_limit = 0.05):
     condition = (tracks_test.energy < energy_limit)
     summed_df = tracks_test[condition].groupby('event')['energy'].sum().reset_index()
 
-    # merge these as a new column
-    merged_df = pd.merge(tracks_test, summed_df, on='event', suffixes=('', '_sum'))
-
+     # merge these as a new column
+    merged_df = pd.merge(tracks_test, summed_df, on='event', suffixes=('', '_sum'), how = 'left').fillna(0)
     # add this summed energy to first column
-    merged_df['energy'] += merged_df['energy_sum'].where(merged_df.groupby('event').cumcount() == 0, 0)
-    #merged_df['energy'] = merged_df.apply(lambda row: (row['energy'] + row['energy_sum']) if row.name == merged_df[merged_df['event'] == row['event']].index[0] else row['energy'], axis=1)
+    merged_df['energy'] = merged_df.apply(lambda row: (row['energy'] + row['energy_sum']) if row.name == merged_df[merged_df['event'] == row['event']].index[0] else row['energy'], axis=1)
 
     # drop energy sum column
     result_df = merged_df.drop('energy_sum', axis = 1)
@@ -249,7 +252,7 @@ def positron_scraper(data_path, save = False):
 
      # collect all filenames
     try:
-        file_names = [f for f in os.listdir(data_path) if os.path.isfile(os.path.join(data_path, f))]
+        file_names = [f for f in os.listdir(data_path) if os.path.isfile(os.path.join(data_path, f)) and f.endswith('.h5')]
     except:
         print("File path incorrect, please state the correct file path\n(but not any particular folder!)")
 
@@ -348,6 +351,7 @@ def true_fom_calc(p_data, no_p_data, cut_list, verbose = False):
     # Take the initial, no blob2 cut values for ns and nb
     ns0 = len(pos_data.index)
     nb0 = len(no_pos_data.index)
+
     # create all the lists for fom
     e = []
     b = []
@@ -368,9 +372,20 @@ def true_fom_calc(p_data, no_p_data, cut_list, verbose = False):
         ns = len(pos_data.index)
         nb = len(no_pos_data.index)
 
-        # produce fom value
-        e.append(ns/ns0)
-        b.append(nb/nb0)
+
+
+        # produce fom value, if ns0 or nb is zero, set to zero.
+        try:
+            e.append(ns/ns0)
+        except:
+            print("Zero-div error, appending 0")
+            e.append(0)
+        
+        try:
+            b.append(nb/nb0)
+        except ZeroDivisionError:
+            print("Zero-div error, appending 0")
+            b.append(0)
         fom.append(e[i]/np.sqrt(b[i]))
 
         if (verbose == True):
@@ -389,7 +404,7 @@ def process_data(path):
 
     print("Opening files...")
     # load and unpack data, assume you're sitting in the PORT_XX folder
-    data = load_data(str(folder_path) + 'data/isaura_test/')
+    data = load_data(str(folder_path) + 'isaura/') 
     tracks = data[0]
     particles = data[1]
     eventmap = data[2]
@@ -523,6 +538,7 @@ def process_data(path):
                              'Single Cut Efficiency': abs_cut_effics
                              })
 
+
     # adding exception in for when there's no data in ecut_rel
     if (len(ecut_rel.index) == 0):
             efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', 0, len(ecut_rel), 0]
@@ -531,6 +547,8 @@ def process_data(path):
             print("No events left in ROI... jobs done!")
             return 0
 
+            
+        
     plot_hist(ecut_rel, column = 'energy', output= False, binning = 20, title = "cut_hist",
                 fill = True, data = False, save = True, save_dir = str(folder_path) + 'output/', log = False)
 
@@ -542,7 +560,7 @@ def process_data(path):
     print("Calculating FOM")
 
     # collect positron events
-    positron_events = positron_scraper(str(folder_path) + 'data/isaura_test/')
+    positron_events = positron_scraper(str(folder_path) + 'isaura/')
     pos_events = (np.unique(positron_events['event_id'].to_numpy()))*2
 
     # number of events that are positrons
@@ -552,6 +570,10 @@ def process_data(path):
     fom = true_fom_calc(ecut_positron_df, ecut_no_positron_df, cut_list)
     # sanitise
     fom = np.nan_to_num(fom)
+
+    print("FOM values:")
+    print(fom)
+
     # remove stupid values based on low statistics
     fom[fom > 10] = 0
     fom[fom < 0] = 0
@@ -566,8 +588,15 @@ def process_data(path):
 
     print("Jobs done!")
 
+    # Save the data to a h5 file
+    ecut_rel.to_hdf(str(folder_path) + 'output/post_cuts.h5', key='cut_data', mode = 'w')
+
+
+
 # set folder_path here!
 if __name__ == '__main__':
     # make this the full path
-    folder_path = '/home/e78368jw/Documents/NEXT_CODE/next_misc/Isaura_full_reco_work/'
-    process_data(folder_path)
+    folder_path = sys.argv[1]
+    print("Processing data at:\n{}".format(folder_path))
+    process_data(str(folder_path))
+                                           
