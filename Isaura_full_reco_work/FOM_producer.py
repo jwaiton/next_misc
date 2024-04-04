@@ -68,7 +68,11 @@ def full_monty(path, port, output_folder):
     print("Opening files...")
     # load data from path
     dire = path + "PORT_" + str(port) + "/isaura/"
-    data = func.load_data(dire)
+    try:
+        data = func.load_data(dire)
+    except:
+        print("No data found for directory:\n{}\nSkipping...".format(dire))
+        continue
 
     tracks      = data[0]
     particles   = data[1]
@@ -91,7 +95,7 @@ def full_monty(path, port, output_folder):
 
     # apply them to the efficiencies
     efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', fom_output[0], len(cut_data), 0]
-    efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', fom_output[1], fom_output[2], 0]
+    efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', fom_output[2], fom_output[3], 0]
 
 
     # write to respective directories
