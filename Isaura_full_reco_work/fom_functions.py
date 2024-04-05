@@ -407,9 +407,9 @@ def apply_cuts(tracks, lower_z = 20, upper_z = 1195, r_lim = 472, lower_e = 1.5,
     cut_names.append("Fiducial Cuts")
 
     # make fiducial cuts
-    fiducial_rel = fiducial_track_cut_2(tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = False)
+    fiducial_rel = fiducial_track_cut_2(tracks, lower_z, upper_z, r_lim, verbose = False)
 
-    fiducial_abs = fiducial_track_cut_2(tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = True)
+    fiducial_abs = fiducial_track_cut_2(tracks, lower_z, upper_z, r_lim, verbose = True)
 
     # make efficiency calculation
     print("Fiducial track cut")
