@@ -526,7 +526,7 @@ def apply_cuts(tracks, lower_z = 20, upper_z = 1195, r_lim = 472, lower_e = 1.5,
             #return 0
     return (ecut_rel, efficiencies)
 
-def apply_FOM(path, data, cut_list):
+def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
     '''
     Function that applies the figure of merit calculation
     outputs its best value and blob-2 position
@@ -555,6 +555,14 @@ def apply_FOM(path, data, cut_list):
     positron_events = len(ecut_positron_df)
     fom_max = fom[max_index]
     blob_val = cut_list[max_index]
+
+    if (plot == True):
+        plt.plot(cut_list, fom, 'o-')
+        plt.title(plot_title)
+        plt.xlabel("Blob-2 energy threshold (MeV)")
+        plt.legend()
+        
+        plt.ylabel("fom")
 
     return (positron_events, len(data), fom_max, blob_val)
 
@@ -770,3 +778,196 @@ def energy_track_plots(tracks, title = "Low pressure track energies"):
     plt.ylabel('Number of tracks')
     plt.colorbar()
     plt.show()
+
+def process_data(path):
+    '''
+    Collects data files, then applies FOM calculation to them
+    '''
+    print("Opening files...")
+    # load and unpack data, assume you're sitting in the PORT_XX folder
+    data = load_data(str(folder_path) + 'isaura/') 
+    tracks = data[0]
+    particles = data[1]
+    eventmap = data[2]
+
+
+    # save raw histogram
+    plot_hist(tracks, column = 'energy', output= False, binning = 65, title = "raw_hist",
+            fill = True, data = False, save = True, save_dir = str(folder_path) + 'output/')
+
+
+    print("Applying Cuts...")
+
+    # remove low energy satellites first
+    low_e_cut_tracks = remove_low_E_events(tracks)
+
+
+    # Efficiency calculation
+    cut_names = []
+    rel_cut_effics = []
+    abs_cut_effics = []
+    cut_events = []
+
+    # no cuts
+    cut_names.append("No cuts")
+    rel_cut_effics.append(100)
+    abs_cut_effics.append(100)
+    # number of events
+    cut_events.append(len_events(tracks))
+
+
+    #####################################################################
+    #####################################################################
+
+    # fiducial cuts
+    cut_names.append("Fiducial Cuts")
+
+    # make fiducial cuts
+    fiducial_rel = fiducial_track_cut_2(low_e_cut_tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = False)
+
+    fiducial_abs = fiducial_track_cut_2(tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = True)
+
+    # make efficiency calculation
+    print("Fiducial track cut")
+    print("==================")
+    print("Relative Cut efficiency:")
+    ef = cut_effic(fiducial_rel, low_e_cut_tracks)
+    rel_cut_effics.append(ef)
+    cut_events.append(len_events(fiducial_rel))
+
+    print('Absolute Cut efficiency:')
+    ef = cut_effic(fiducial_abs, tracks)
+    abs_cut_effics.append(ef)
+
+
+
+    #####################################################################
+    #####################################################################
+
+    cut_names.append("One track cut")
+    one_track_rel = one_track_cuts(fiducial_rel, verbose = False)
+
+    # events are relative, as absolute efficiency lets you figure out events from the beginning# absolute
+    one_track_abs = one_track_cuts(tracks)
+
+    # relative
+    print("One track cut")
+    print("================")
+    print("Relative Cut efficiency:")
+    ef = cut_effic(one_track_rel, fiducial_rel)
+    rel_cut_effics.append(ef)
+    cut_events.append(len_events(one_track_rel))
+
+    # absolute
+    print("Absolute Cut efficiency:")
+    ef = cut_effic(one_track_abs, tracks)
+    abs_cut_effics.append(ef)
+
+
+
+    #####################################################################
+    #####################################################################
+
+    # apply cuts
+    ovlp_rel = overlapping_cuts(one_track_rel)
+    ovlp_abs = overlapping_cuts(tracks)
+
+
+    cut_names.append("Blob overlap cuts")
+
+    # relative
+    print("Blob overlap cut")
+    print("================")
+    print("Relative Cut efficiency:")
+    ef = cut_effic(ovlp_rel, one_track_rel)
+    rel_cut_effics.append(ef)
+    cut_events.append(len_events(ovlp_rel))
+
+
+    # absolute
+    print("Absolute Cut efficiency:")
+    ef = cut_effic(ovlp_abs, tracks)
+    abs_cut_effics.append(ef)
+
+
+    #####################################################################
+    #####################################################################
+
+    ecut_rel = energy_cuts(ovlp_rel)
+    ecut_abs = energy_cuts(tracks)
+
+    cut_names.append("Energy cuts")
+
+    # relative
+    print("Energy cut")
+    print("================")
+    print("Relative Cut efficiency:")
+    ef = cut_effic(ecut_rel, ovlp_rel)
+    rel_cut_effics.append(ef)
+    cut_events.append(len_events(ecut_rel))
+
+
+    # absolute
+    print("Absolute Cut efficiency:")
+    ef = cut_effic(ecut_abs, tracks)
+    abs_cut_effics.append(ef)
+
+
+    efficiencies = pd.DataFrame({'Cut': cut_names,
+                             'Relative Efficiency': rel_cut_effics,
+                             'Relative Events': cut_events,
+                             'Single Cut Efficiency': abs_cut_effics
+                             })
+
+
+    # adding exception in for when there's no data in ecut_rel
+    if (len(ecut_rel.index) == 0):
+            efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', 0, len(ecut_rel), 0]
+            efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', 0, 0, 0]
+            efficiencies.to_csv(str(folder_path) + 'output/efficiency.csv')
+            print("No events left in ROI... jobs done!")
+            return 0
+
+            
+        
+    plot_hist(ecut_rel, column = 'energy', output= False, binning = 20, title = "cut_hist",
+                fill = True, data = False, save = True, save_dir = str(folder_path) + 'output/', log = False)
+
+
+    ###########################################################################################
+    # EFFICIENCY CALCULATION OVER
+    ###########################################################################################
+
+    print("Calculating FOM")
+
+    # collect positron events
+    positron_events = positron_scraper(str(folder_path) + 'isaura/')
+    pos_events = (np.unique(positron_events['event_id'].to_numpy()))*2
+
+    # number of events that are positrons
+    ecut_positron_df = ecut_rel[ecut_rel['event'].isin(pos_events)]
+    ecut_no_positron_df = ecut_rel[~ecut_rel['event'].isin(pos_events)]
+    cut_list = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
+    fom = true_fom_calc(ecut_positron_df, ecut_no_positron_df, cut_list)
+    # sanitise
+    fom = np.nan_to_num(fom)
+
+    print("FOM values:")
+    print(fom)
+
+    # remove stupid values based on low statistics
+    fom[fom > 10] = 0
+    fom[fom < 0] = 0
+
+    max_index = np.argmax(fom)
+
+
+    efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', len(ecut_positron_df), len(ecut_rel), 0]
+    efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', fom[max_index], cut_list[max_index], 0]
+    
+    efficiencies.to_csv(str(folder_path) + 'output/efficiency.csv')
+
+    print("Jobs done!")
+
+    # Save the data to a h5 file
+    ecut_rel.to_hdf(str(folder_path) + 'output/post_cuts.h5', key='cut_data', mode = 'w')
