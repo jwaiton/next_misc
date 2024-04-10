@@ -538,7 +538,6 @@ def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
     # number of events that are positrons
     ecut_positron_df = data[data['event'].isin(pos_events)]
     ecut_no_positron_df = data[~data['event'].isin(pos_events)]
-    cut_list = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
     fom = true_fom_calc(ecut_positron_df, ecut_no_positron_df, cut_list)
     # sanitise
     fom = np.nan_to_num(fom)
