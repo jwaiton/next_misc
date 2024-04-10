@@ -317,6 +317,12 @@ def blob_positron_plot(ecut_rel, ecut_no_positron_df, save = False, save_title =
     '''
     Plots the blob energies with and without positrons.
     '''
+    # make range full range of blob1 and blob2
+    eblob_full = []
+    eblob_full.append(ecut_rel['eblob1'].to_numpy())
+    eblob_full.append(ecut_rel['eblob2'].to_numpy())
+    minimum_e = np.min(eblob_full)
+    maximum_e = np.max(eblob_full)
 
     # the original way
     plot_hist(ecut_rel, column = 'eblob2', binning = 20, title = "Blob energies", output = False, fill = False, label = 'blob 2', x_label = 'energy (MeV)', range = (minimum_e, maximum_e))
