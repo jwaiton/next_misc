@@ -24,6 +24,7 @@ from    IC.invisible_cities.core.core_functions   import shift_to_bin_centers
 import scipy.special as special
 from scipy.stats import skewnorm
 from scipy.optimize import curve_fit
+import matplotlib.ticker as ticker
 
 
 
