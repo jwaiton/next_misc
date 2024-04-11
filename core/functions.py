@@ -28,7 +28,7 @@ import matplotlib.ticker as ticker
 
 
 
-def plot_hist(df, column = 'energy', binning = 20, title = "Energy plot", output = False, fill = True, label = 'default', x_label = 'energy (MeV)', range = 0, log = True, data = False, save = False, save_dir = ''):
+def plot_hist(df, column = 'energy', binning = 20, title = "Energy plot", output = False, fill = True, label = 'default', x_label = 'energy (MeV)', range = 0, log = True, data = False, save = False, save_dir = '', alpha = 1):
     '''
     Print a histogram of energy from our dataframe,.
     '''
@@ -40,7 +40,7 @@ def plot_hist(df, column = 'energy', binning = 20, title = "Energy plot", output
 
     # control viewing of hist
     if (fill == True):
-        cnts, edges, patches = plt.hist(energy_vals, bins = binning, label = label, range = range)
+        cnts, edges, patches = plt.hist(energy_vals, bins = binning, label = label, range = range, alpha = alpha)
     else:
         cnts, edges, patches = plt.hist(energy_vals, bins = binning, label = label, histtype='step', linewidth = 2, range = range)
     plt.title(title)
@@ -332,8 +332,8 @@ def blob_positron_plot(ecut_rel, ecut_no_positron_df, save = False, save_title =
     #plt.hist(no_pos_blob1, bins = 20, label = 'events with no e+', range = (minimum_e, maximum_e))
     #plt.hist(no_pos_blob2, bins = 20, label = 'events with no e+', range = (minimum_e, maximum_e))
 
-    plot_hist(ecut_no_positron_df, column = 'eblob1', binning = 20, title = "Blob energies", output = False, fill = True, label = '- events with no e+', x_label = 'energy (MeV)', range = (minimum_e, maximum_e))
-    plot_hist(ecut_no_positron_df, column = 'eblob2', binning = 20, title = "Blob energies", output = False, fill = True, label = '- events with no e+', x_label = 'energy (MeV)', range = (minimum_e, maximum_e))
+    plot_hist(ecut_no_positron_df, column = 'eblob1', binning = 20, title = "Blob energies", output = False, fill = True, label = 'blob1 - no e+', x_label = 'energy (MeV)', range = (minimum_e, maximum_e))
+    plot_hist(ecut_no_positron_df, column = 'eblob2', binning = 20, title = "Blob energies", output = False, fill = True, label = 'blob2 - no e+', x_label = 'energy (MeV)', range = (minimum_e, maximum_e), alpha = 0.5)
 
     plt.legend()
 
@@ -354,16 +354,27 @@ def true_fom_calc(p_data, no_p_data, cut_list, verbose = False):
     pos_data = p_data.copy(deep = True)
     no_pos_data = no_p_data.copy(deep = True)
 
-    if (verbose == True):
-        blob_positron_plot(pos_data, no_pos_data)
     # Take the initial, no blob2 cut values for ns and nb
     ns0 = len(pos_data.index)
     nb0 = len(no_pos_data.index)
+    total0 = ns0 + nb0
+
+
+    if (verbose == True):
+        print("Total events: {}\nSignal events: {}\nBackground events: {}\n".format(total0, ns0, nb0))
+        blob_positron_plot(pos_data, no_pos_data)
+    
+    
 
     # create all the lists for fom
     e = []
+    e_err = []
     b = []
+    b_err = []
     fom = []
+    fom_err = []
+    ns = [ns0]
+    nb = [nb0]
 
     for i in range(len(cut_list)):
         
@@ -377,30 +388,40 @@ def true_fom_calc(p_data, no_p_data, cut_list, verbose = False):
             print("Signal events: {}\nBackground events: {}\n FOM: {}".format())
         
         # collect number of signal events vs number of backgrounds, which you know 
-        ns = len(pos_data.index)
-        nb = len(no_pos_data.index)
+        ns.append(len(pos_data.index))
+        nb.append(len(no_pos_data.index))
 
 
 
         # produce fom value, if ns0 or nb is zero, set to zero.
         try:
-            e.append(ns/ns0)
+            e.append(ns[i+1]/ns0)
         except:
             print("Zero-div error, appending 0")
             e.append(0)
         
         try:
-            b.append(nb/nb0)
+            b.append(nb[i+1]/nb0)
         except ZeroDivisionError:
             print("Zero-div error, appending 0")
             b.append(0)
         fom.append(e[i]/np.sqrt(b[i]))
 
+        # errors
+
+        # errors for e and b
+
+
+        # errors for fom
+        e_err.append(ratio_error(e[i],ns[i+1],ns0,np.sqrt(ns[i+1]),np.sqrt(ns0)))
+        b_err.append(ratio_error(b[i],nb[i+1],nb0,np.sqrt(nb[i+1]),np.sqrt(nb0)))
+        fom_err.append(fom_error(e[i], b[i], e_err[i], b_err[i]))
+
         if (verbose == True):
             blob_positron_plot(pos_data, no_pos_data)
-        
+    
     # that should be it? i dont expect this to work first time, but lets test it!
-    return fom
+    return (fom, fom_err, ns, nb)
 
 
 def apply_cuts(tracks, lower_z = 20, upper_z = 1195, r_lim = 472, lower_e = 1.5, upper_e = 1.7):
@@ -547,10 +568,20 @@ def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
     ecut_no_positron_df = data[~data['event'].isin(pos_events)]
     fom = true_fom_calc(ecut_positron_df, ecut_no_positron_df, cut_list)
     # sanitise
-    fom = np.nan_to_num(fom)
+    ns = fom[2]
+    nb = fom[3]
+    fom_error = np.nan_to_num(fom[1])
+    fom = np.nan_to_num(fom[0])
+
+    print("ns, nb")
+    print(ns)
+    print(nb)
+    
 
     print("FOM values:")
     print(fom)
+    print("Errors")
+    print(fom_error)
 
     # remove stupid values based on low statistics
     fom[fom > 10] = 0
@@ -563,12 +594,20 @@ def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
     blob_val = cut_list[max_index]
 
     if (plot == True):
-        plt.plot(cut_list, fom, 'o-')
+        plt.errorbar(cut_list, fom, yerr = fom_error)
         plt.title(plot_title)
         plt.xlabel("Blob-2 energy threshold (MeV)")
         plt.legend()
         
         plt.ylabel("fom")
+        plt.show()
+
+        # this isn't correct (removing the last element), but i think it'll be okay
+        plt.plot(cut_list, ns[:-1], label = "Signal events")
+        plt.plot(cut_list, nb[:-1], label = "Background events")
+        plt.title("signal and background across cuts")
+        plt.legend()
+        plt.show()
 
     return (positron_events, len(data), fom_max, blob_val)
 
@@ -768,7 +807,7 @@ def get_weights(data, norm):
     else:
         return np.repeat(1.0, len(data))
 
-def energy_track_plots(tracks, title = "Low pressure track energies"):
+def energy_track_plots(tracks, title = "Low pressure track energies", limit = [0]):
     '''
     Plot the 2D histogram of number of tracks against track energy
     '''
@@ -778,7 +817,10 @@ def energy_track_plots(tracks, title = "Low pressure track energies"):
     weights = get_weights(track_energy, True)
     #plt.hist2d(track_energy, track_no, bins=(50, 20), cmin=0.001)
     plt.hist2d(track_energy, track_no, weights = weights, bins=(100, 11), cmin=0.0005)
-    plt.xlim([0,1])
+    if limit == [0]:
+        print("No limits applied")
+    else:
+        plt.xlim([0,1])
     plt.title(title)
     plt.xlabel('Energy (MeV)')
     plt.ylabel('Number of tracks')
@@ -977,3 +1019,37 @@ def process_data(path):
 
     # Save the data to a h5 file
     ecut_rel.to_hdf(str(folder_path) + 'output/post_cuts.h5', key='cut_data', mode = 'w')
+
+###########################################################################################
+# ERROR CALCULATIONS
+###########################################################################################
+
+
+def ratio_error(f, a, b, a_error, b_error):
+    '''
+    Error multiplication via quadrature
+
+    f - efficiency (%)
+    a - events post-cut (be it signal or background)
+    b - total events (likewise)
+    a_error - sqrt of events post-cut
+    b_error - sqrt of total events
+    '''
+    f_error = f*np.sqrt((a_error/a)**2 +(b_error/b)**2)
+    return f_error
+
+
+def fom_error(a, b, a_error, b_error):
+    '''
+    a           -       signal efficiency
+    b           -       background acceptance
+    a_error     -       signal error
+    b_error     -       background error
+    Worked out again in Joplin notes: 11/04/24
+    '''
+
+    element_1 = np.square(a_error/np.sqrt(b))
+    element_2 = np.square((b_error * a) / (2*(b**(3/2))))
+    f_error = np.sqrt(element_1 + element_2)
+
+    return f_error
