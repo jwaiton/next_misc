@@ -29,48 +29,259 @@ Any&nbsp;time&nbsp;I&nbsp;need&nbsp;to&nbsp;use&nbsp;a&nbsp;function,&nbsp;I'm&n
 </td><td width="25%" valign=top><a href="scipy.special.html">scipy.special</a><br>
 <a href="sys.html">sys</a><br>
 <a href="tables.html">tables</a><br>
-</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+</td><td width="25%" valign=top><a href="matplotlib.ticker.html">matplotlib.ticker</a><br>
+</td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-apply_FOM"><strong>apply_FOM</strong></a>(path, data, cut_list)</dt><dd><tt>Function&nbsp;that&nbsp;applies&nbsp;the&nbsp;figure&nbsp;of&nbsp;merit&nbsp;calculation<br>
-outputs&nbsp;its&nbsp;best&nbsp;value&nbsp;and&nbsp;blob-2&nbsp;position</tt></dd></dl>
- <dl><dt><a name="-apply_cuts"><strong>apply_cuts</strong></a>(tracks, lower_z=20, upper_z=1195, r_lim=472, lower_e=1.5, upper_e=1.7)</dt><dd><tt>Applies&nbsp;all&nbsp;cuts,&nbsp;returns&nbsp;dataframe&nbsp;and&nbsp;efficiency&nbsp;table</tt></dd></dl>
- <dl><dt><a name="-blob_positron_plot"><strong>blob_positron_plot</strong></a>(ecut_rel, ecut_no_positron_df, save=False, save_title='plot.png')</dt><dd><tt>Plots&nbsp;the&nbsp;blob&nbsp;energies&nbsp;with&nbsp;and&nbsp;without&nbsp;positrons.</tt></dd></dl>
- <dl><dt><a name="-cut_effic"><strong>cut_effic</strong></a>(df1, df2, verbose=False)</dt><dd><tt>Prints&nbsp;efficiency&nbsp;of&nbsp;cuts&nbsp;for&nbsp;singular&nbsp;cut<br>
-df1&nbsp;-&gt;&nbsp;cut&nbsp;df<br>
-df2&nbsp;-&gt;&nbsp;initial&nbsp;df</tt></dd></dl>
- <dl><dt><a name="-energy_cuts"><strong>energy_cuts</strong></a>(df, lower_e=1.5, upper_e=1.7, verbose=False)</dt><dd><tt>Apply&nbsp;cuts&nbsp;around&nbsp;the&nbsp;relevant&nbsp;energy</tt></dd></dl>
- <dl><dt><a name="-energy_track_plots"><strong>energy_track_plots</strong></a>(tracks)</dt><dd><tt>Plot&nbsp;the&nbsp;2D&nbsp;histogram&nbsp;of&nbsp;number&nbsp;of&nbsp;tracks&nbsp;against&nbsp;track&nbsp;energy</tt></dd></dl>
- <dl><dt><a name="-fiducial_track_cut_2"><strong>fiducial_track_cut_2</strong></a>(df, lower_z=20, upper_z=1195, r_lim=472, verbose=False)</dt><dd><tt>Produces&nbsp;fiducial&nbsp;track&nbsp;cuts&nbsp;while&nbsp;removing&nbsp;all&nbsp;events&nbsp;that&nbsp;have&nbsp;outer&nbsp;fiducial&nbsp;tracks</tt></dd></dl>
- <dl><dt><a name="-get_weights"><strong>get_weights</strong></a>(data, norm)</dt><dd><tt>useful&nbsp;function&nbsp;for&nbsp;normalising&nbsp;histograms<br>
-Source&nbsp;from&nbsp;Helena's&nbsp;functions</tt></dd></dl>
- <dl><dt><a name="-len_events"><strong>len_events</strong></a>(df)</dt><dd><tt>Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;unique&nbsp;events&nbsp;as&nbsp;len(df)&nbsp;doesn't&nbsp;work&nbsp;in&nbsp;this&nbsp;case</tt></dd></dl>
- <dl><dt><a name="-load_data"><strong>load_data</strong></a>(folder_path)</dt><dd><tt>give&nbsp;folder&nbsp;path&nbsp;of&nbsp;h5&nbsp;files,&nbsp;and&nbsp;it'll&nbsp;take&nbsp;the&nbsp;/Tracking/Tracks,&nbsp;MC/particles,&nbsp;and&nbsp;the&nbsp;event&nbsp;map.<br>
-outputs&nbsp;tuple&nbsp;as:&nbsp;(tracks,&nbsp;particles,&nbsp;eventmap)</tt></dd></dl>
- <dl><dt><a name="-one_track_cuts"><strong>one_track_cuts</strong></a>(df, verbose=False)</dt><dd><tt>Remove&nbsp;events&nbsp;with&nbsp;more&nbsp;than&nbsp;one&nbsp;track<br>
-THERE&nbsp;IS&nbsp;A&nbsp;COLUMN&nbsp;WITH&nbsp;THIS&nbsp;INFO&nbsp;IN&nbsp;IT,&nbsp;CALCULATING&nbsp;IT&nbsp;IS&nbsp;UNNECESSARY</tt></dd></dl>
- <dl><dt><a name="-overlapping_cuts"><strong>overlapping_cuts</strong></a>(df, verbose=False)</dt><dd><tt>Remove&nbsp;all&nbsp;events&nbsp;with&nbsp;energy&nbsp;overlap&nbsp;!=&nbsp;0</tt></dd></dl>
- <dl><dt><a name="-plot_2Dhist"><strong>plot_2Dhist</strong></a>(ND_array, xlabel, ylabel, title='2D Histogram', xlabel_title='x axis', ylabel_title='y axis')</dt><dd><tt>ND_array&nbsp;-&gt;&nbsp;input&nbsp;array&nbsp;of&nbsp;NxN&nbsp;dimensions.&nbsp;MAKE&nbsp;SURE&nbsp;ITS&nbsp;NUMPY&nbsp;HSTACKED&nbsp;ARRAY<br>
-xlabel&nbsp;&nbsp;&nbsp;-&gt;&nbsp;x&nbsp;label&nbsp;list<br>
-ylabel&nbsp;&nbsp;&nbsp;-&gt;&nbsp;y&nbsp;label&nbsp;list<br>
+<td width="100%"><dl><dt><a name="-apply_FOM"><strong>apply_FOM</strong></a>(path, data, cut_list, plot=False, plot_title=' ')</dt><dd><tt>Function&nbsp;that&nbsp;applies&nbsp;the&nbsp;figure&nbsp;of&nbsp;merit&nbsp;calculation<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;path&nbsp;for&nbsp;collecting&nbsp;positron&nbsp;events<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe&nbsp;for&nbsp;tracks<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cut_list&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list&nbsp;of&nbsp;cuts<br>
+&nbsp;&nbsp;&nbsp;&nbsp;plot&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;plotting&nbsp;boolean<br>
+&nbsp;&nbsp;&nbsp;&nbsp;plot_title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title&nbsp;of&nbsp;plot<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(positron_events,&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number&nbsp;of&nbsp;positron&nbsp;(signal)&nbsp;events<br>
+&nbsp;&nbsp;&nbsp;&nbsp;len(data),&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Number&nbsp;of&nbsp;total&nbsp;events<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fom_max,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Maximal&nbsp;FOM&nbsp;value<br>
+&nbsp;&nbsp;&nbsp;&nbsp;blob_val)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;blob-2&nbsp;cut&nbsp;value&nbsp;at&nbsp;maximal&nbsp;FOM&nbsp;value</tt></dd></dl>
+ <dl><dt><a name="-apply_cuts"><strong>apply_cuts</strong></a>(tracks, lower_z=20, upper_z=1195, r_lim=472, lower_e=1.5, upper_e=1.7)</dt><dd><tt>Applies&nbsp;all&nbsp;known&nbsp;cuts,&nbsp;returns&nbsp;dataframe&nbsp;and&nbsp;efficiency&nbsp;table.<br>
+Highly&nbsp;bespoke&nbsp;function,&nbsp;use&nbsp;with&nbsp;care.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tracks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe&nbsp;of&nbsp;particle&nbsp;tracks<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lower_z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lower&nbsp;z-bound&nbsp;for&nbsp;fiducial&nbsp;cut<br>
+&nbsp;&nbsp;&nbsp;&nbsp;upper_z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;upper&nbsp;z-bound&nbsp;for&nbsp;fiducial&nbsp;cut<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r_lim&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;radial&nbsp;bound&nbsp;for&nbsp;fiducial&nbsp;cut<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lower_e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lower&nbsp;bound&nbsp;for&nbsp;energy&nbsp;cut<br>
+&nbsp;&nbsp;&nbsp;&nbsp;upper_e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;upper&nbsp;bound&nbsp;for&nbsp;energy&nbsp;cut<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(ecut_rel,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe&nbsp;with&nbsp;output&nbsp;of&nbsp;track&nbsp;cuts<br>
+&nbsp;&nbsp;&nbsp;&nbsp;efficiencies)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;efficiency&nbsp;table</tt></dd></dl>
+ <dl><dt><a name="-blob_positron_plot"><strong>blob_positron_plot</strong></a>(ecut_rel, ecut_no_positron_df, save=False, save_title='plot.png')</dt><dd><tt>Plots&nbsp;the&nbsp;blob&nbsp;energies&nbsp;with&nbsp;and&nbsp;without&nbsp;positrons.<br>
+This&nbsp;is&nbsp;a&nbsp;very&nbsp;bespoke&nbsp;function.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ecut_rel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe&nbsp;with&nbsp;positrons<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ecut_no_positron_df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe&nbsp;with&nbsp;no&nbsp;positrons<br>
+&nbsp;&nbsp;&nbsp;&nbsp;save&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;save&nbsp;figure&nbsp;boolean<br>
+&nbsp;&nbsp;&nbsp;&nbsp;save_title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;figure&nbsp;title<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;empty&nbsp;return</tt></dd></dl>
+ <dl><dt><a name="-cut_effic"><strong>cut_effic</strong></a>(df1, df2, verbose=False)</dt><dd><tt>Produce&nbsp;efficiency&nbsp;of&nbsp;a&nbsp;single&nbsp;cut&nbsp;by&nbsp;comparison&nbsp;of&nbsp;unique<br>
+values&nbsp;in&nbsp;two&nbsp;databases&nbsp;(pre&nbsp;and&nbsp;post&nbsp;cut).<br>
+This&nbsp;works&nbsp;best&nbsp;with&nbsp;h5&nbsp;files&nbsp;produced&nbsp;through&nbsp;IC&nbsp;chain.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe&nbsp;1&nbsp;(post-cut)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe&nbsp;2&nbsp;(pre-cut)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;boolean<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;efficiency&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;efficiency&nbsp;of&nbsp;cuts</tt></dd></dl>
+ <dl><dt><a name="-energy_cuts"><strong>energy_cuts</strong></a>(df, lower_e=1.5, upper_e=1.7, verbose=False)</dt><dd><tt>Remove&nbsp;all&nbsp;events&nbsp;outwith&nbsp;the&nbsp;relevant&nbsp;energy&nbsp;values<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pandas&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lower_e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lower&nbsp;bound&nbsp;for&nbsp;energy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;upper_e&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;upper&nbsp;bound&nbsp;for&nbsp;energy<br>
+&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;boolean<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;filt_e_df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cut&nbsp;dataframe</tt></dd></dl>
+ <dl><dt><a name="-energy_track_plots"><strong>energy_track_plots</strong></a>(tracks, title='Low pressure track energies', limit=[0])</dt><dd><tt>Plot&nbsp;the&nbsp;2D&nbsp;histogram&nbsp;of&nbsp;number&nbsp;of&nbsp;tracks&nbsp;against&nbsp;track&nbsp;energy<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tracks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe&nbsp;of&nbsp;tracks<br>
+&nbsp;&nbsp;&nbsp;&nbsp;title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title&nbsp;of&nbsp;plot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;limit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;limits&nbsp;of&nbsp;the&nbsp;energy&nbsp;tracks<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;empty&nbsp;return</tt></dd></dl>
+ <dl><dt><a name="-fiducial_track_cut_2"><strong>fiducial_track_cut_2</strong></a>(df, lower_z=20, upper_z=1195, r_lim=472, verbose=False)</dt><dd><tt>Remove&nbsp;events&nbsp;outwith&nbsp;the&nbsp;defined&nbsp;fiducial&nbsp;volume.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pandas&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;lower_z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lower&nbsp;z-bound&nbsp;for&nbsp;fiducial&nbsp;cut<br>
+&nbsp;&nbsp;&nbsp;&nbsp;upper_z&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;upper&nbsp;z-bound&nbsp;for&nbsp;fiducial&nbsp;cut<br>
+&nbsp;&nbsp;&nbsp;&nbsp;r_lim&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;radial&nbsp;bound&nbsp;for&nbsp;fiducial&nbsp;cut<br>
+&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;boolean<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cut&nbsp;dataframe</tt></dd></dl>
+ <dl><dt><a name="-fom_error"><strong>fom_error</strong></a>(a, b, a_error, b_error)</dt><dd><tt>Produces&nbsp;error&nbsp;for&nbsp;figure&nbsp;of&nbsp;merit<br>
+Derived&nbsp;in&nbsp;Joplin&nbsp;notes:&nbsp;11/04/24<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;signal&nbsp;efficiency<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background&nbsp;acceptance<br>
+&nbsp;&nbsp;&nbsp;&nbsp;a_error&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;signal&nbsp;error<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b_error&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;background&nbsp;error<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;f_error&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FOM&nbsp;error</tt></dd></dl>
+ <dl><dt><a name="-get_weights"><strong>get_weights</strong></a>(data, norm)</dt><dd><tt>Creates&nbsp;weights&nbsp;for&nbsp;normalising&nbsp;data&nbsp;for&nbsp;use&nbsp;in&nbsp;histograms.<br>
+Source&nbsp;from&nbsp;Helena's&nbsp;functions<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;norm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;normalise&nbsp;boolean<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;weights&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;weights&nbsp;of&nbsp;the&nbsp;data</tt></dd></dl>
+ <dl><dt><a name="-len_events"><strong>len_events</strong></a>(df)</dt><dd><tt>Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;unique&nbsp;events&nbsp;as&nbsp;len(df)&nbsp;doesn't&nbsp;work&nbsp;in<br>
+our&nbsp;case&nbsp;(IC&nbsp;chain)<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pandas&nbsp;dataframe<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;length_1&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;length&nbsp;of&nbsp;dataframe</tt></dd></dl>
+ <dl><dt><a name="-load_data"><strong>load_data</strong></a>(folder_path)</dt><dd><tt>Load&nbsp;in&nbsp;multiple&nbsp;h5&nbsp;files&nbsp;and&nbsp;produce&nbsp;dataframes&nbsp;corresponding&nbsp;to&nbsp;/Tracking/Tracks,&nbsp;/MC/Particles,&nbsp;and&nbsp;their&nbsp;corresponding<br>
+eventmap.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;folder_path&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;to&nbsp;folder&nbsp;of&nbsp;h5&nbsp;files<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(tracks,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tracks&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;particles,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MC&nbsp;particle&nbsp;information&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;eventmap)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eventmap&nbsp;for&nbsp;MC&nbsp;-&gt;&nbsp;Tracks</tt></dd></dl>
+ <dl><dt><a name="-one_track_cuts"><strong>one_track_cuts</strong></a>(df, verbose=False)</dt><dd><tt>Remove&nbsp;events&nbsp;with&nbsp;more&nbsp;than&nbsp;one&nbsp;track&nbsp;from&nbsp;dataframe<br>
+There&nbsp;is&nbsp;a&nbsp;better&nbsp;way&nbsp;of&nbsp;doing&nbsp;this,&nbsp;using&nbsp;a&nbsp;column&nbsp;within&nbsp;the&nbsp;dataframe.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pandas&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;boolean<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;one_track_events&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cut&nbsp;dataframe</tt></dd></dl>
+ <dl><dt><a name="-overlapping_cuts"><strong>overlapping_cuts</strong></a>(df, verbose=False)</dt><dd><tt>Remove&nbsp;all&nbsp;events&nbsp;with&nbsp;blobs&nbsp;of&nbsp;overlapping&nbsp;energy&nbsp;!=&nbsp;0<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pandas&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;boolean<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ovlp_remove&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cut&nbsp;dataframe</tt></dd></dl>
+ <dl><dt><a name="-plot_2Dhist"><strong>plot_2Dhist</strong></a>(ND_array, xlabel, ylabel, title='2D Histogram', xlabel_title='x axis', ylabel_title='y axis')</dt><dd><tt>Plots&nbsp;2D&nbsp;histogram&nbsp;from&nbsp;array&nbsp;of&nbsp;NxN&nbsp;dimensions.&nbsp;Note:&nbsp;must&nbsp;be&nbsp;a&nbsp;hstack&nbsp;array&nbsp;via&nbsp;numpy<br>
+Used&nbsp;for&nbsp;FOM&nbsp;plot&nbsp;creation.<br>
 &nbsp;<br>
 To&nbsp;make&nbsp;array&nbsp;suitable&nbsp;for&nbsp;input&nbsp;use&nbsp;function&nbsp;similar&nbsp;to&nbsp;this:<br>
-array&nbsp;=&nbsp;np.hstack((array_1,&nbsp;array_2,&nbsp;array_3,&nbsp;array_4,&nbsp;array_5,&nbsp;array_6)).reshape(-1,array_1.shape[0])</tt></dd></dl>
- <dl><dt><a name="-plot_hist"><strong>plot_hist</strong></a>(df, column='energy', binning=20, title='Energy plot', output=False, fill=True, label='default', x_label='energy (MeV)', range=0, log=True, data=False, save=False, save_dir='')</dt><dd><tt>Print&nbsp;a&nbsp;histogram&nbsp;of&nbsp;energy&nbsp;from&nbsp;our&nbsp;dataframe,.</tt></dd></dl>
+array&nbsp;=&nbsp;np.hstack((array_1,&nbsp;array_2,&nbsp;array_3,&nbsp;array_4,&nbsp;array_5,&nbsp;array_6)).reshape(-1,array_1.shape[0])<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ND_array&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;input&nbsp;array&nbsp;of&nbsp;NxN&nbsp;dimensions.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;xlabel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;label&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ylabel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y&nbsp;label&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Title&nbsp;of&nbsp;plot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;xlabel_title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;label<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ylabel_title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y&nbsp;label<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;empty&nbsp;return</tt></dd></dl>
+ <dl><dt><a name="-plot_hist"><strong>plot_hist</strong></a>(df, column='energy', binning=20, title='Energy plot', output=False, fill=True, label='default', x_label='energy (MeV)', range=0, log=True, data=False, save=False, save_dir='', alpha=1)</dt><dd><tt>Produce&nbsp;a&nbsp;histogram&nbsp;for&nbsp;a&nbsp;specific&nbsp;column&nbsp;within&nbsp;a&nbsp;dataframe.<br>
+Used&nbsp;for&nbsp;NEXT-100&nbsp;data&nbsp;analysis.&nbsp;Can&nbsp;be&nbsp;overlaid&nbsp;on&nbsp;top&nbsp;of&nbsp;other&nbsp;histograms.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pandas&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;column&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;column&nbsp;the&nbsp;histogram&nbsp;will&nbsp;plot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;binning&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;number&nbsp;of&nbsp;bins&nbsp;in&nbsp;histogram<br>
+&nbsp;&nbsp;&nbsp;&nbsp;title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;title&nbsp;of&nbsp;the&nbsp;plot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;output&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;visualise&nbsp;the&nbsp;plot&nbsp;(useful&nbsp;for&nbsp;notebooks)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fill&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fill&nbsp;the&nbsp;histogram<br>
+&nbsp;&nbsp;&nbsp;&nbsp;label&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add&nbsp;histogram&nbsp;label&nbsp;(for&nbsp;legend)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;x_label&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x-axis&nbsp;label<br>
+&nbsp;&nbsp;&nbsp;&nbsp;range&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;range&nbsp;limiter&nbsp;for&nbsp;histogram&nbsp;(min,&nbsp;max)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;log&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;y-axis&nbsp;log&nbsp;boolean<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;output&nbsp;histogram&nbsp;information&nbsp;boolean<br>
+&nbsp;&nbsp;&nbsp;&nbsp;save&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Save&nbsp;the&nbsp;plot&nbsp;as&nbsp;.png&nbsp;boolean<br>
+&nbsp;&nbsp;&nbsp;&nbsp;save_dir&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;directory&nbsp;to&nbsp;save&nbsp;the&nbsp;plot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;alpha&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;opacity&nbsp;of&nbsp;histogram<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(data==False):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;None&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;empty&nbsp;return<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(data==True):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(cnts,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;number&nbsp;of&nbsp;counts<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;edges,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;values&nbsp;of&nbsp;the&nbsp;histogram&nbsp;edges<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;patches)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;matplotlib&nbsp;patch&nbsp;object</tt></dd></dl>
  <dl><dt><a name="-positron_scraper"><strong>positron_scraper</strong></a>(data_path, save=False)</dt><dd><tt>Function&nbsp;that&nbsp;iterates&nbsp;over&nbsp;files&nbsp;with&nbsp;MC&nbsp;and&nbsp;collects&nbsp;only&nbsp;positron&nbsp;events.<br>
-Intended&nbsp;to&nbsp;reduce&nbsp;the&nbsp;memory&nbsp;resources&nbsp;of&nbsp;MC&nbsp;data.</tt></dd></dl>
- <dl><dt><a name="-remove_low_E_events"><strong>remove_low_E_events</strong></a>(df, energy_limit=0.05)</dt><dd><tt>Remove&nbsp;low&nbsp;energy&nbsp;tracks,&nbsp;add&nbsp;their&nbsp;energy&nbsp;back&nbsp;to&nbsp;the&nbsp;first<br>
-track&nbsp;and&nbsp;then&nbsp;update&nbsp;'numb_of_tracks'&nbsp;to&nbsp;be&nbsp;up&nbsp;to&nbsp;date</tt></dd></dl>
- <dl><dt><a name="-scrape_FOM_data"><strong>scrape_FOM_data</strong></a>(data_path)</dt><dd><tt>scrape&nbsp;all&nbsp;FOM&nbsp;data&nbsp;from&nbsp;h5&nbsp;file&nbsp;and&nbsp;plot&nbsp;them</tt></dd></dl>
- <dl><dt><a name="-scrape_any_data"><strong>scrape_any_data</strong></a>(data_path, string_1, string_2, plot_title)</dt><dd><tt>string&nbsp;1&nbsp;and&nbsp;2&nbsp;define&nbsp;the&nbsp;names&nbsp;of&nbsp;the&nbsp;row&nbsp;and&nbsp;columns&nbsp;you<br>
-wish&nbsp;to&nbsp;select&nbsp;in&nbsp;your&nbsp;h5&nbsp;file</tt></dd></dl>
- <dl><dt><a name="-true_fom_calc"><strong>true_fom_calc</strong></a>(p_data, no_p_data, cut_list, verbose=False)</dt><dd><tt>produces&nbsp;a&nbsp;figure&nbsp;of&nbsp;merit&nbsp;list&nbsp;based<br>
-on&nbsp;cuts&nbsp;to&nbsp;specific&nbsp;categories&nbsp;and&nbsp;their<br>
-consequent&nbsp;fits</tt></dd></dl>
+Intended&nbsp;to&nbsp;reduce&nbsp;the&nbsp;memory&nbsp;resources&nbsp;of&nbsp;MC&nbsp;data.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data_path&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;to&nbsp;folder&nbsp;of&nbsp;h5&nbsp;files<br>
+&nbsp;&nbsp;&nbsp;&nbsp;save&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;save&nbsp;the&nbsp;data&nbsp;separately&nbsp;boolean<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;pos_df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;positron&nbsp;dataframe</tt></dd></dl>
+ <dl><dt><a name="-process_data"><strong>process_data</strong></a>(path)</dt><dd><tt>Collects&nbsp;isaura&nbsp;data&nbsp;files&nbsp;from&nbsp;a&nbsp;defined&nbsp;folder,&nbsp;applies&nbsp;cuts&nbsp;and<br>
+calculates&nbsp;FOM&nbsp;and&nbsp;efficiency&nbsp;plots.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;path&nbsp;to&nbsp;folder&nbsp;containing&nbsp;h5&nbsp;files<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;empty&nbsp;return</tt></dd></dl>
+ <dl><dt><a name="-ratio_error"><strong>ratio_error</strong></a>(f, a, b, a_error, b_error)</dt><dd><tt>Error&nbsp;multiplication&nbsp;via&nbsp;quadrature<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;f&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;efficiency&nbsp;(%)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;events&nbsp;post-cut&nbsp;(be&nbsp;it&nbsp;signal&nbsp;or&nbsp;background)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;total&nbsp;events&nbsp;(likewise)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;a_error&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sqrt&nbsp;of&nbsp;events&nbsp;post-cut<br>
+&nbsp;&nbsp;&nbsp;&nbsp;b_error&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sqrt&nbsp;of&nbsp;total&nbsp;events<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;f_error&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cumulative&nbsp;error</tt></dd></dl>
+ <dl><dt><a name="-remove_low_E_events"><strong>remove_low_E_events</strong></a>(df, energy_limit=0.05)</dt><dd><tt>Remove&nbsp;satellite&nbsp;energy&nbsp;tracks,&nbsp;add&nbsp;their&nbsp;energy&nbsp;back&nbsp;to&nbsp;the<br>
+first&nbsp;track&nbsp;and&nbsp;then&nbsp;update&nbsp;'numb_of_tracks'&nbsp;to&nbsp;be&nbsp;accurate<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pandas&nbsp;dataframe<br>
+&nbsp;&nbsp;&nbsp;&nbsp;energy_limt&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;upper&nbsp;bound&nbsp;of&nbsp;energy<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;remove_low_E&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cut&nbsp;dataframe</tt></dd></dl>
+ <dl><dt><a name="-scrape_FOM_data"><strong>scrape_FOM_data</strong></a>(data_path)</dt><dd><tt>Scrape&nbsp;all&nbsp;FOM&nbsp;data&nbsp;from&nbsp;a&nbsp;h5&nbsp;file&nbsp;and&nbsp;plot&nbsp;the&nbsp;result&nbsp;with&nbsp;plot_2Dhist<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data_path&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;path&nbsp;leading&nbsp;to&nbsp;relevant&nbsp;h5&nbsp;file<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;empty&nbsp;return</tt></dd></dl>
+ <dl><dt><a name="-scrape_any_data"><strong>scrape_any_data</strong></a>(data_path, string_1, string_2, plot_title)</dt><dd><tt>Similar&nbsp;to&nbsp;function&nbsp;'scrape_FOM_data',&nbsp;<br>
+but&nbsp;works&nbsp;with&nbsp;any&nbsp;row&nbsp;and&nbsp;column&nbsp;from&nbsp;efficiency&nbsp;h5&nbsp;file.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data_path&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;path&nbsp;leading&nbsp;to&nbsp;relevant&nbsp;h5&nbsp;file<br>
+&nbsp;&nbsp;&nbsp;&nbsp;string_1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;row&nbsp;of&nbsp;interest<br>
+&nbsp;&nbsp;&nbsp;&nbsp;string_2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;column&nbsp;of&nbsp;interest<br>
+&nbsp;&nbsp;&nbsp;&nbsp;plot_title&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;plot&nbsp;title<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;None&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;empty&nbsp;return</tt></dd></dl>
+ <dl><dt><a name="-true_fom_calc"><strong>true_fom_calc</strong></a>(p_data, no_p_data, cut_list, verbose=False)</dt><dd><tt>Produces&nbsp;a&nbsp;figure&nbsp;of&nbsp;merit&nbsp;list&nbsp;based&nbsp;on&nbsp;cuts&nbsp;to&nbsp;<br>
+specific&nbsp;categories&nbsp;and&nbsp;their&nbsp;consequent&nbsp;fits.<br>
+&nbsp;<br>
+Args:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;p_data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;positron&nbsp;event&nbsp;dataframe&nbsp;(signal)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;no_p_data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;no&nbsp;positron&nbsp;event&nbsp;dataframe&nbsp;(background)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;cut_list&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;list&nbsp;of&nbsp;blob-2&nbsp;energy&nbsp;cuts&nbsp;to&nbsp;apply&nbsp;across&nbsp;FOM&nbsp;scan<br>
+&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;verbose&nbsp;boolean<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;(fom,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Array&nbsp;of&nbsp;FOM&nbsp;values&nbsp;across&nbsp;the&nbsp;cuts<br>
+&nbsp;&nbsp;&nbsp;&nbsp;fom_err,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Array&nbsp;of&nbsp;FOM&nbsp;errors&nbsp;across&nbsp;the&nbsp;cuts<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ns,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Array&nbsp;of&nbsp;number&nbsp;of&nbsp;signal&nbsp;values&nbsp;across&nbsp;the&nbsp;cuts<br>
+&nbsp;&nbsp;&nbsp;&nbsp;nb)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Array&nbsp;of&nbsp;number&nbsp;of&nbsp;background&nbsp;values&nbsp;across&nbsp;the&nbsp;cuts</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

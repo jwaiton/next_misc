@@ -34,28 +34,29 @@ def plot_hist(df, column = 'energy', binning = 20, title = "Energy plot", output
     Used for NEXT-100 data analysis. Can be overlaid on top of other histograms.
     
     Args:
-        df          :       Pandas dataframe
-        column      :       Column the histogram will plot
-        binning     :       Number of bins in histogram
-        title       :       Title of the plot
-        output      :       Visualise the plot (useful for notebooks)
-        fill        :       Fill the histogram
+        df          :       pandas dataframe
+        column      :       column the histogram will plot
+        binning     :       number of bins in histogram
+        title       :       title of the plot
+        output      :       visualise the plot (useful for notebooks)
+        fill        :       fill the histogram
         label       :       Add histogram label (for legend)
         x_label     :       x-axis label
-        range       :       Range limiter for histogram (min, max)
+        range       :       range limiter for histogram (min, max)
         log         :       y-axis log boolean
         data        :       output histogram information boolean
         save        :       Save the plot as .png boolean
-        save_dir    :       Directory to save the plot
+        save_dir    :       directory to save the plot
         alpha       :       opacity of histogram
 
     Returns:
         if (data==False):
-            None        :       Empty return
+            None          :       empty return
         if (data==True):
-            cnts        :       Number of counts
-            edges       :       Values of the histogram edges
-            patches     :       matplotlib patch object
+            (cnts,        :       number of counts
+            edges,        :       values of the histogram edges
+            patches)      :       matplotlib patch object
+
 
     '''
     # for simplicity/readability, scoop out the relevant columns from the pandas dataframe.
@@ -89,8 +90,15 @@ def plot_hist(df, column = 'energy', binning = 20, title = "Energy plot", output
 
 def load_data(folder_path):
     '''
-    give folder path of h5 files, and it'll take the /Tracking/Tracks, MC/particles, and the event map.
-    outputs tuple as: (tracks, particles, eventmap)
+    Load in multiple h5 files and produce dataframes corresponding to /Tracking/Tracks, /MC/Particles, and their corresponding
+    eventmap.
+
+    Args:
+        folder_path     :       path to folder of h5 files
+    Returns:
+        (tracks,        :       tracks dataframe
+        particles,      :       MC particle information dataframe
+        eventmap)       :       eventmap for MC -> Tracks
     '''
     file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f.endswith('.h5')]
     
@@ -133,10 +141,19 @@ def load_data(folder_path):
 
 def cut_effic(df1, df2, verbose = False):
     '''
-    Prints efficiency of cuts for singular cut
-    df1 -> cut df
-    df2 -> initial df
+    Produce efficiency of a single cut by comparison of unique
+    values in two databases (pre and post cut).
+    This works best with h5 files produced through IC chain.
+
+    Args:
+        df1         :       dataframe 1 (post-cut)
+        df2         :       dataframe 2 (pre-cut)
+        verbose     :       verbose boolean
+
+    Returns:
+        efficiency  :       efficiency of cuts
     '''
+
     length_1 = df1['event'].nunique()
     length_2 = df2['event'].nunique()
     efficiency = ((length_1/length_2)*100)
@@ -150,7 +167,17 @@ def cut_effic(df1, df2, verbose = False):
 
 def fiducial_track_cut_2(df, lower_z = 20, upper_z = 1195, r_lim = 472, verbose = False):
     '''
-    Produces fiducial track cuts while removing all events that have outer fiducial tracks
+    Remove events outwith the defined fiducial volume.
+
+    Args:
+        df          :           pandas dataframe
+        lower_z     :           lower z-bound for fiducial cut
+        upper_z     :           upper z-bound for fiducial cut
+        r_lim       :           radial bound for fiducial cut
+        verbose     :           verbose boolean
+
+    Returns:
+        df3         :           cut dataframe
     '''
     # create lists of outer_fiduc entries
     z_df_low = df[(df['z_min'] <= lower_z)]
@@ -178,8 +205,16 @@ def fiducial_track_cut_2(df, lower_z = 20, upper_z = 1195, r_lim = 472, verbose 
 
 def one_track_cuts(df, verbose = False):
     '''
-    Remove events with more than one track
-    THERE IS A COLUMN WITH THIS INFO IN IT, CALCULATING IT IS UNNECESSARY
+    Remove events with more than one track from dataframe
+    There is a better way of doing this, using a column within the dataframe.
+
+    Args:
+        df                  :               pandas dataframe
+        verbose             :               verbose boolean
+
+    Returns:
+        one_track_events    :               cut dataframe
+
     '''
     # 1-track event counter
     event_counts = df.groupby('event').size()
@@ -204,7 +239,14 @@ def one_track_cuts(df, verbose = False):
 
 def overlapping_cuts(df, verbose = False):
     '''
-    Remove all events with energy overlap != 0
+    Remove all events with blobs of overlapping energy != 0
+
+    Args:
+        df              :               pandas dataframe
+        verbose         :               verbose boolean
+
+    Returns:
+        ovlp_remove     :               cut dataframe
     '''
 
     ovlp_remove = df[df['ovlp_blob_energy']==0]
@@ -219,7 +261,16 @@ def overlapping_cuts(df, verbose = False):
 
 def energy_cuts(df, lower_e = 1.5, upper_e = 1.7, verbose = False):
     '''
-    Apply cuts around the relevant energy
+    Remove all events outwith the relevant energy values
+
+    Args:
+        df              :           pandas dataframe
+        lower_e         :           lower bound for energy
+        upper_e         :           upper bound for energy
+        verbose         :           verbose boolean
+    
+    Returns:
+        filt_e_df       :           cut dataframe
     '''
     filt_e_df = df[(df['energy'] >= lower_e) & (df['energy'] <= upper_e)]
 
@@ -231,8 +282,15 @@ def energy_cuts(df, lower_e = 1.5, upper_e = 1.7, verbose = False):
 
 def remove_low_E_events(df, energy_limit = 0.05):
     '''
-    Remove low energy tracks, add their energy back to the first
-    track and then update 'numb_of_tracks' to be up to date
+    Remove satellite energy tracks, add their energy back to the
+    first track and then update 'numb_of_tracks' to be accurate
+
+    Args:
+        df              :           pandas dataframe
+        energy_limt     :           upper bound of energy
+
+    Returns:
+        remove_low_E    :           cut dataframe
     '''
 
     tracks_test = df.copy(deep=True)
@@ -264,7 +322,14 @@ def remove_low_E_events(df, energy_limit = 0.05):
 
 def len_events(df):
     '''
-    Returns the number of unique events as len(df) doesn't work in this case
+    Returns the number of unique events as len(df) doesn't work in
+    our case (IC chain)
+
+    Args:
+        df          :       pandas dataframe
+    
+    Returns:
+        length_1    :       length of dataframe
     '''
     length_1 = df['event'].nunique()
     return length_1
@@ -274,6 +339,13 @@ def positron_scraper(data_path, save = False):
     """
     Function that iterates over files with MC and collects only positron events.
     Intended to reduce the memory resources of MC data.
+
+    Args:
+        data_path       :       path to folder of h5 files
+        save            :       save the data separately boolean
+    
+    Returns:
+        pos_df          :       positron dataframe
     """
 
 
@@ -343,6 +415,16 @@ def positron_scraper(data_path, save = False):
 def blob_positron_plot(ecut_rel, ecut_no_positron_df, save = False, save_title = 'plot.png'):
     '''
     Plots the blob energies with and without positrons.
+    This is a very bespoke function.
+
+    Args:
+        ecut_rel                :          dataframe with positrons
+        ecut_no_positron_df     :          dataframe with no positrons
+        save                    :          save figure boolean
+        save_title              :          figure title
+    
+    Returns:
+        None                    :          empty return
     '''
     # make range full range of blob1 and blob2
     eblob_full = []
@@ -370,10 +452,20 @@ def blob_positron_plot(ecut_rel, ecut_no_positron_df, save = False, save_title =
 
 def true_fom_calc(p_data, no_p_data, cut_list, verbose = False):
     '''
-    produces a figure of merit list based
-    on cuts to specific categories and their
-    consequent fits
+    Produces a figure of merit list based on cuts to 
+    specific categories and their consequent fits.
 
+    Args:
+        p_data          :       positron event dataframe (signal)
+        no_p_data       :       no positron event dataframe (background)
+        cut_list        :       list of blob-2 energy cuts to apply across FOM scan
+        verbose         :       verbose boolean
+
+    Returns:
+        (fom,           :       Array of FOM values across the cuts
+        fom_err,        :       Array of FOM errors across the cuts
+        ns,             :       Array of number of signal values across the cuts
+        nb)             :       Array of number of background values across the cuts
     '''
 
     # create deep copies for safety
@@ -452,7 +544,20 @@ def true_fom_calc(p_data, no_p_data, cut_list, verbose = False):
 
 def apply_cuts(tracks, lower_z = 20, upper_z = 1195, r_lim = 472, lower_e = 1.5, upper_e = 1.7):
     '''
-    Applies all cuts, returns dataframe and efficiency table
+    Applies all known cuts, returns dataframe and efficiency table.
+    Highly bespoke function, use with care.
+
+    Args:
+        tracks          :       dataframe of particle tracks
+        lower_z         :       lower z-bound for fiducial cut
+        upper_z         :       upper z-bound for fiducial cut
+        r_lim           :       radial bound for fiducial cut
+        lower_e         :       lower bound for energy cut
+        upper_e         :       upper bound for energy cut
+    
+    Returns:
+        (ecut_rel,      :       dataframe with output of track cuts
+        efficiencies)           efficiency table
     '''
     # Efficiency calculation
     cut_names = []
@@ -583,7 +688,20 @@ def apply_cuts(tracks, lower_z = 20, upper_z = 1195, r_lim = 472, lower_e = 1.5,
 def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
     '''
     Function that applies the figure of merit calculation
-    outputs its best value and blob-2 position
+
+    Args:
+        path                :           data path for collecting positron events
+        data                :           dataframe for tracks
+        cut_list            :           list of cuts
+        plot                :           plotting boolean
+        plot_title          :           title of plot
+    
+    Returns:
+        (positron_events,   :           Number of positron (signal) events
+        len(data),                      Number of total events
+        fom_max,                        Maximal FOM value
+        blob_val)                       blob-2 cut value at maximal FOM value
+        
     '''
     # collect positron events
     positron_events = positron_scraper(path)
@@ -646,12 +764,22 @@ def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
 
 def plot_2Dhist(ND_array, xlabel, ylabel, title = '2D Histogram', xlabel_title = 'x axis', ylabel_title = 'y axis'):
     '''
-    ND_array -> input array of NxN dimensions. MAKE SURE ITS NUMPY HSTACKED ARRAY
-    xlabel   -> x label list
-    ylabel   -> y label list
+    Plots 2D histogram from array of NxN dimensions. Note: must be a hstack array via numpy
+    Used for FOM plot creation.
 
     To make array suitable for input use function similar to this:
     array = np.hstack((array_1, array_2, array_3, array_4, array_5, array_6)).reshape(-1,array_1.shape[0])
+
+    Args:
+        ND_array            :           input array of NxN dimensions.
+        xlabel              :           x label list
+        ylabel              :           y label list
+        title               :           Title of plot
+        xlabel_title        :           x label
+        ylabel_title        :           y label
+
+    Returns:
+        None                :           empty return
     '''
 
 
@@ -693,7 +821,13 @@ def plot_2Dhist(ND_array, xlabel, ylabel, title = '2D Histogram', xlabel_title =
 # It works! Functionalise
 def scrape_FOM_data(data_path):
     '''
-    scrape all FOM data from h5 file and plot them
+    Scrape all FOM data from a h5 file and plot the result with plot_2Dhist
+
+    Args:
+        data_path           :       data path leading to relevant h5 file
+
+    Returns:
+        None                :       empty return
     '''
 
 
@@ -759,8 +893,17 @@ def scrape_FOM_data(data_path):
 # this one differs, it allows you to scrape any data and make a 2D FOM plot
 def scrape_any_data(data_path, string_1, string_2, plot_title):
     '''
-    string 1 and 2 define the names of the row and columns you
-    wish to select in your h5 file
+    Similar to function 'scrape_FOM_data', 
+    but works with any row and column from efficiency h5 file.
+
+    Args:
+        data_path           :           data path leading to relevant h5 file
+        string_1            :           row of interest
+        string_2            :           column of interest
+        plot_title          :           plot title
+    
+    Returns:
+        None                :           empty return
     '''
 
     # collect data
@@ -825,8 +968,16 @@ def scrape_any_data(data_path, string_1, string_2, plot_title):
     # useful to normalize histograms
 def get_weights(data, norm):
     '''
-    useful function for normalising histograms
+    Creates weights for normalising data for use in histograms.
     Source from Helena's functions
+
+    Args:
+        data            :       dataframe
+        norm            :       normalise boolean
+
+    Returns:
+        weights         :       weights of the data
+
     '''
     if norm:
         return np.repeat(1.0/len(data), len(data))
@@ -836,6 +987,14 @@ def get_weights(data, norm):
 def energy_track_plots(tracks, title = "Low pressure track energies", limit = [0]):
     '''
     Plot the 2D histogram of number of tracks against track energy
+
+    Args:
+        tracks          :       dataframe of tracks
+        title           :       title of plot
+        limit           :       limits of the energy tracks
+    
+    Returns:
+        None            :       empty return
     '''
     track_energy = tracks.energy
     track_no = tracks.numb_of_tracks
@@ -855,7 +1014,14 @@ def energy_track_plots(tracks, title = "Low pressure track energies", limit = [0
 
 def process_data(path):
     '''
-    Collects data files, then applies FOM calculation to them
+    Collects isaura data files from a defined folder, applies cuts and
+    calculates FOM and efficiency plots.
+
+    Args:
+        path        :       path to folder containing h5 files
+
+    Returns:
+        None        :       empty return
     '''
     print("Opening files...")
     # load and unpack data, assume you're sitting in the PORT_XX folder
@@ -1055,11 +1221,15 @@ def ratio_error(f, a, b, a_error, b_error):
     '''
     Error multiplication via quadrature
 
-    f - efficiency (%)
-    a - events post-cut (be it signal or background)
-    b - total events (likewise)
-    a_error - sqrt of events post-cut
-    b_error - sqrt of total events
+    Args:
+        f       :       efficiency (%)
+        a       :       events post-cut (be it signal or background)
+        b       :       total events (likewise)
+        a_error :       sqrt of events post-cut
+        b_error :       sqrt of total events
+    
+    Returns:
+        f_error :       cumulative error
     '''
     f_error = f*np.sqrt((a_error/a)**2 +(b_error/b)**2)
     return f_error
@@ -1067,11 +1237,18 @@ def ratio_error(f, a, b, a_error, b_error):
 
 def fom_error(a, b, a_error, b_error):
     '''
-    a           -       signal efficiency
-    b           -       background acceptance
-    a_error     -       signal error
-    b_error     -       background error
-    Worked out again in Joplin notes: 11/04/24
+    Produces error for figure of merit
+    Derived in Joplin notes: 11/04/24
+    
+    Args:
+        a           :       signal efficiency
+        b           :       background acceptance
+        a_error     :       signal error
+        b_error     :       background error
+    
+    Returns:
+        f_error     :       FOM error
+    
     '''
 
     element_1 = np.square(a_error/np.sqrt(b))
