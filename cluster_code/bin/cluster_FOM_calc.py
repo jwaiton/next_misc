@@ -543,6 +543,7 @@ def process_data(path):
     if (len(ecut_rel.index) == 0):
             efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', 0, len(ecut_rel), 0]
             efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', 0, 0, 0]
+            efficiencies.loc[len(efficiencies.index)] = ['trk_no - satellite_no', len(tracks.index), len(tracks.index) - len(low_e_cut_tracks.index), 0]
             efficiencies.to_csv(str(folder_path) + 'output/efficiency.csv')
             print("No events left in ROI... jobs done!")
             return 0
@@ -583,6 +584,7 @@ def process_data(path):
 
     efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', len(ecut_positron_df), len(ecut_rel), 0]
     efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', fom[max_index], cut_list[max_index], 0]
+    efficiencies.loc[len(efficiencies.index)] = ['trk_no - satellite_no', len(tracks.index), len(tracks.index) - len(low_e_cut_tracks.index), 0]
     
     efficiencies.to_csv(str(folder_path) + 'output/efficiency.csv')
 
