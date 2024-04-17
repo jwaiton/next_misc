@@ -21,7 +21,7 @@ import fom_functions as func
 
 def full_monty(path, port, output_folder):
     '''
-    Will do everything as explained above
+    Will do everything as explained below
 
     path is directory
     port is port of interest (1a, 1b, 2a, 2b)
@@ -72,7 +72,7 @@ def full_monty(path, port, output_folder):
         data = func.load_data(dire)
     except:
         print("No data found for directory:\n{}\nSkipping...".format(dire))
-        continue
+        return 0
 
     tracks      = data[0]
     particles   = data[1]
@@ -96,7 +96,7 @@ def full_monty(path, port, output_folder):
     # apply them to the efficiencies
     efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', fom_output[0], len(cut_data), 0]
     efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', fom_output[2], fom_output[3], 0]
-
+    efficiencies.loc[len(efficiencies.index)] = ['trk_no - satellite_no', len(tracks.index), len(tracks.index) - len(low_e_cut_tracks.index), 0]
 
     # write to respective directories
     out_dir = path+output_folder
