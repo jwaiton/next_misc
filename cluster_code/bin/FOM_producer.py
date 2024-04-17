@@ -63,7 +63,7 @@ def full_monty(path, port, output_folder):
     ####################################
     # FOM cut list
     ####################################
-    cut_list = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
+    cut_list = np.linspace(0,0.6,61)
 
     print("Opening files...")
     # load data from path
