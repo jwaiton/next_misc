@@ -30,7 +30,33 @@ import matplotlib.ticker as ticker
 
 def plot_hist(df, column = 'energy', binning = 20, title = "Energy plot", output = False, fill = True, label = 'default', x_label = 'energy (MeV)', range = 0, log = True, data = False, save = False, save_dir = '', alpha = 1):
     '''
-    Print a histogram of energy from our dataframe,.
+    Produce a histogram for a specific column within a dataframe.
+    Used for NEXT-100 data analysis. Can be overlaid on top of other histograms.
+    
+    Args:
+        df          :       Pandas dataframe
+        column      :       Column the histogram will plot
+        binning     :       Number of bins in histogram
+        title       :       Title of the plot
+        output      :       Visualise the plot (useful for notebooks)
+        fill        :       Fill the histogram
+        label       :       Add histogram label (for legend)
+        x_label     :       x-axis label
+        range       :       Range limiter for histogram (min, max)
+        log         :       y-axis log boolean
+        data        :       output histogram information boolean
+        save        :       Save the plot as .png boolean
+        save_dir    :       Directory to save the plot
+        alpha       :       opacity of histogram
+
+    Returns:
+        if (data==False):
+            None        :       Empty return
+        if (data==True):
+            cnts        :       Number of counts
+            edges       :       Values of the histogram edges
+            patches     :       matplotlib patch object
+
     '''
     # for simplicity/readability, scoop out the relevant columns from the pandas dataframe.
     energy_vals = df[column].to_numpy()
