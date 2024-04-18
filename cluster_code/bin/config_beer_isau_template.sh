@@ -6,9 +6,13 @@ RUNNUMBER=0
 
 INPUT_1=$2
 INPUT_2=$3
+INPUT_3=$4
+
+PORT="${INPUT_3}"
 
 echo "Applying e_cut: ${INPUT_2}"
 echo "Applying n_iter: ${INPUT_1}"
+echo "Across port: ${INPUT_3}"
 ######################
 # BEERSHEBA PARAMETERS
 ######################
@@ -37,9 +41,9 @@ BLOB_RAD="20 * mm"
 ####################
 
 
-INFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/Q_THR4/PORT_1a/sophronia/sophronia_${NUMBER}_208Tl.h5"
-BEERFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/ITER_ECUT/${N_ITER}_${E_CUT}/PORT_1a/beersheba/beersheba_${NUMBER}_208Tl.h5"
-ISAUFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/ITER_ECUT/${N_ITER}_${E_CUT}/PORT_1a/isaura/isaura_${NUMBER}_208Tl.h5"
+INFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/Q_THR4/PORT_${PORT}/sophronia/sophronia_${NUMBER}_208Tl.h5"
+BEERFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/ITER_ECUT/${N_ITER}_${E_CUT}/PORT_${PORT}/beersheba/beersheba_${NUMBER}_208Tl.h5"
+ISAUFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/ITER_ECUT/${N_ITER}_${E_CUT}/PORT_${PORT}/isaura/isaura_${NUMBER}_208Tl.h5"
 
 # Activating IC
 
@@ -48,7 +52,7 @@ echo "IO files found"
 source /gluster/data/next/software/IC_sophronia/config_ic.sh
 echo "IC sourced"
 
-DIRECTORY="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/ITER_ECUT/${N_ITER}_${E_CUT}/PORT_1a/"
+DIRECTORY="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/ITER_ECUT/${N_ITER}_${E_CUT}/PORT_${PORT}/"
 
 mkdir -p ${DIRECTORY}"beersheba/" 
 mkdir -p ${DIRECTORY}"isaura/" 
