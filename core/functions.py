@@ -547,6 +547,8 @@ def apply_cuts(tracks, lower_z = 20, upper_z = 1195, r_lim = 472, lower_e = 1.5,
     Applies all known cuts, returns dataframe and efficiency table.
     Highly bespoke function, use with care.
 
+    NOTE: Does not include satellite track removal
+
     Args:
         tracks          :       dataframe of particle tracks
         lower_z         :       lower z-bound for fiducial cut
