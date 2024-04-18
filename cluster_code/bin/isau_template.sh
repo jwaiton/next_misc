@@ -27,7 +27,7 @@ BLOB_RAD="${INPUT_3} * mm"
 
 
 INFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/ITER_ECUT/75_9e-3/PORT_${PORT}/beersheba/beersheba_${NUMBER}_208Tl.h5"
-ISAUFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/blobR_voxelS/${INPUT_1}_${INPUT_1}_${INPUT_2}/PORT_1a/isaura/isaura_${NUMBER}_208Tl.h5"
+ISAUFILE="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/blobR_voxelS/${INPUT_1}_${INPUT_2}_${INPUT_3}/PORT_${PORT}/isaura/isaura_${NUMBER}_208Tl.h5"
 
 # Activating IC
 
@@ -36,7 +36,7 @@ echo "IO files found"
 source /gluster/data/next/software/IC_sophronia/config_ic.sh
 echo "IC sourced"
 
-DIRECTORY="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/blobR_voxelS/${INPUT_1}_${INPUT_2}_${INPUT_3}/PORT_1a/"
+DIRECTORY="/gluster/data/next/files/TOPOLOGY_John/HYPPOS_DATA_QTHR/BEERSHEBA_STUDY/blobR_voxelS/${INPUT_1}_${INPUT_2}_${INPUT_3}/PORT_${PORT}/"
 
 
 
