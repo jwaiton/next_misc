@@ -68,8 +68,6 @@ echo "Directories generated"
 
 ## Generate IC config
 CFG_MACRO="/gluster/data/next/files/TOPOLOGY_John/Configs/beersheba.LPR.NEXT100.${E_CUT}_${N_ITER}_${NUMBER}.config"
-# if it already exists, remove it, it'll cause problems if you don't!
-rm -f $CFG_MACRO
 echo "Beersheba macro started"
 
 ## Lighttables Paths
@@ -78,7 +76,7 @@ echo "Lighttable imported"
 
 #### CONFIG FILE
 # set paths
-echo "files_in = '${INFILE}'  "                          	>> ${CFG_MACRO}
+echo "files_in = '${INFILE}'  "                          	> ${CFG_MACRO}
 echo "file_out = '${BEERFILE}'  "                          	>> ${CFG_MACRO}
 
 # compression library
