@@ -320,18 +320,19 @@ def remove_low_E_events(df, energy_limit = 0.05):
     return remove_low_E
 
 
-def len_events(df):
+def len_events(df, tag = 'event'):
     '''
     Returns the number of unique events as len(df) doesn't work in
     our case (IC chain)
 
     Args:
         df          :       pandas dataframe
+        tag         :       tag to know which column to check for unique events
     
     Returns:
         length_1    :       length of dataframe
     '''
-    length_1 = df['event'].nunique()
+    length_1 = df[tag].nunique()
     return length_1
 
 
@@ -1258,3 +1259,124 @@ def fom_error(a, b, a_error, b_error):
     f_error = np.sqrt(element_1 + element_2)
 
     return f_error
+
+###########################################################################################
+# FITTING FUNCTIONS!!!
+###########################################################################################
+
+def bck_func(x, nb, tau):
+    '''
+    Function describing the background, an exponential with scaling from Nb and tau
+    '''
+
+    return nb*np.exp(-x/tau)
+
+
+
+def skewnorm_func(x, a, mu, sigma):
+    return skewnorm.pdf(x, a, loc = mu, scale = sigma)
+
+
+
+def error_func(x, mu, sigma):
+    pas = (x - mu)/(np.sqrt(2)*sigma)
+    return special.erfc(pas)
+
+
+
+def sig_func(x, ns, a, mu, sigma, C1, C2):
+    
+    return ns * (skewnorm_func(x, a, mu, sigma) + C1*error_func(x, mu, sigma) + C2)
+
+
+
+def sig_bck_func(x, ns, a, mu, sigma, C1, C2, nb, tau):
+
+    return bck_func(x, nb, tau) + sig_func(x, ns, a, mu, sigma, C1, C2)
+
+
+# create gaussian initially for testing purposes
+def gauss(x, a, mu, sigma):
+    numer = np.square(x - mu)
+    denom = 2*np.square(sigma)
+
+    return a*np.exp(-numer/denom)
+
+
+def gauss_norm(x, a, mu, sigma):
+    numer = np.square(x - mu)
+    denom = 2*np.square(sigma)
+    norm = (np.sqrt(2*np.pi) * sigma)
+
+
+    return (a*np.exp(-numer/denom))/ norm
+
+def gauss_bck_norm(x, a, mu, sigma, C):
+    numer = np.square(x - mu)
+    denom = 2*np.square(sigma)
+    norm = (np.sqrt(2*np.pi) * sigma)
+
+    return (a*np.exp(-numer/denom) / norm) + C    
+
+
+def bck(x, C):
+    return np.full_like(x, C)
+
+def gauss_bck(x, a, mu, sigma, C):
+    numer = np.square(x - mu)
+    denom = 2*np.square(sigma)
+
+
+    return a*np.exp(-numer/denom) + C
+
+# and a print function
+def print_parameters(popt,pcov,labels):
+    '''
+    Prints fitting parameters
+
+    :param popt:        Fit parameters
+    :param pcov:        Fit covariances
+    :param labels:      Labels of parameters
+    '''
+    print('===============================')
+    print("        Fitting output      ")
+    print('===============================')
+    for i in range(len(popt)):
+        print("{}: {:.4f} \u00B1 {:.4f}".format(labels[i], popt[i], np.sqrt(pcov[i][i]) )) # taking diagonal covariances as errors
+    print('===============================')
+    return 0
+
+ 
+# plot parameters for fit, similar to plot_hist
+def plot_fit(function, x, popt, popt_label, output = False, colour = 'red', x_counts = 100000, lgnd = 'Fit', popt_text = True):
+    '''
+    plots a fit based on individual points and a function
+    plots across a more continuous space, to reduce weird artifacting for low X numbers
+    '''
+
+    # take much more continuous x axis
+    x_min = np.min(x)
+    x_max = np.max(x)
+
+    x_plot = np.linspace(x_min, x_max, num = x_counts, endpoint = True)
+
+    y = function(x_plot, *popt)
+    plt.plot(x_plot, y, label = lgnd, color = colour)
+    
+    # create locations to put the text relative to the scale of the figure
+    percentage_hor = 0.01
+    percentage_vert = 0.95
+    x_loc = np.min(x) + (np.max(x) - np.min(x))*percentage_hor
+    y_loc = np.min(y) + (np.max(y) - np.min(y))*percentage_vert
+    # reasonable gap for separation, based on scale
+    gap = (np.max(y) - np.min(y)) * 0.05
+
+    if (popt_text == False):
+        for i in range(len(popt)):
+
+            plt.text(x_loc, y_loc - gap*i, str(popt_label[i]) + ": " + str(round(popt[i], 5)), verticalalignment='top', horizontalalignment='left')
+
+    if (output == True):
+        plt.show()
+    else:
+        return

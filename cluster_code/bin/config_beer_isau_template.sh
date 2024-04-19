@@ -124,15 +124,15 @@ sleep 1s
 
 
 ## Generate IC config
-CFG_MACRO_ISAURA="/gluster/data/next/files/TOPOLOGY_John/Configs/isaura.LPR.NEXT100.${CUT_TYPE}_${E_CUT}_${NUMBER}.config"
+CFG_MACRO_ISAURA="/gluster/data/next/files/TOPOLOGY_John/Configs/isaura.LPR.NEXT100.${CUT_TYPE}_${E_CUT}_${N_ITER}_${NUMBER}.config"
 # if it already exists, remove it, it'll cause problems if you don't!
-rm -f $CFG_MACRO_ISAURA
+#rm -f $CFG_MACRO_ISAURA
 echo "Macro started"
 
 
 #### CONFIG FILE
 # set paths
-echo "files_in = '${BEERFILE}'  "                                 >> ${CFG_MACRO_ISAURA}
+echo "files_in = '${BEERFILE}'  "                                 > ${CFG_MACRO_ISAURA}
 echo "file_out = '${ISAUFILE}'  "                                >> ${CFG_MACRO_ISAURA}
 
 # compression library
