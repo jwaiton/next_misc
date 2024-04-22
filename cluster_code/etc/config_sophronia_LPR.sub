@@ -1,0 +1,17 @@
+executable      = bin/config_sophronia_muon_LPR.sh 
+request_memory  = 512M
+request_cpus    = 1
+request_disk    = 5G
+initialdir	= $ENV(HOME)/scripts
+output          = out/hypathia_LPR.$(ClusterId)-$(Process).out
+error           = out/hypathia_LPR.$(ClusterId)-$(Process).err
+log             = out/hypathia_LPR.$(ClusterId)-$(Process).log
+arguments = $(Process)
+
+max_idle = 100
+
+should_transfer_files = yes
+when_to_transfer_output = ON_EXIT
+
+queue 5
+

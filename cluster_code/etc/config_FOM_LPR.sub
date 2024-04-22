@@ -1,0 +1,17 @@
+executable      = bin/run_FOM_calc.sh 
+request_memory  = 512M
+request_cpus    = 1
+request_disk    = 5G
+initialdir	= $ENV(HOME)/scripts
+output          = out/FOM_calc.out
+error           = out/FOM_calc.err
+log             = out/FOM_calc.log
+arguments = $(Process)
+
+#max_idle = 100
+
+should_transfer_files = yes
+when_to_transfer_output = ON_EXIT
+
+queue 1
+

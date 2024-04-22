@@ -1,0 +1,23 @@
+executable      = bin/isau_template.sh 
+request_memory  = 512M
+request_cpus    = 1
+request_disk    = 5G
+initialdir	= $ENV(HOME)/scripts
+
+VOX_XY=12
+VOX_Z=12
+BLOB_R=24
+PORT=1a
+
+output          = out/isaura_scanning/p$(PORT)/isaura.$(ClusterId)-$(Process)-$(VOX_XY)-$(VOX_Z)-$(BLOB_R)-p$(PORT).out
+error           = out/isaura_scanning/p$(PORT)/isaura.$(ClusterId)-$(Process)-$(VOX_XY)-$(VOX_Z)-$(BLOB_R)-p$(PORT).err
+log             = out/isaura_scanning/p$(PORT)/isaura.$(ClusterId)-$(Process)-$(VOX_XY)-$(VOX_Z)-$(BLOB_R)-p$(PORT).log
+arguments = $(Process) $(VOX_XY) $(VOX_Z) $(BLOB_R) $(PORT)
+
+max_idle = 100
+
+should_transfer_files = yes
+when_to_transfer_output = ON_EXIT
+
+queue 300
+
