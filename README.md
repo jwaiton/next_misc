@@ -44,3 +44,15 @@ Early beersheba work, REMOVE THIS FOLDER/MOVE TO MISCELLANEOUS/MERGE WITH BEERSH
 
 A control study of the parameters within sophronia, beersheba & isaura. 
 Only one developed is sophronia.
+
+### miscellaneous
+
+Folder of random bits and bobs
+
+### nexus_PR
+
+PR work for nexus
+
+### pau_study
+
+Study into muon tracks @ LPR
