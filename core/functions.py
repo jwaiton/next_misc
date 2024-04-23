@@ -139,6 +139,41 @@ def load_data(folder_path):
 
     return (tracks, particles, eventmap)
 
+def collate_ports(path_array):
+    '''
+    Collect individual ports and merge the information
+
+    Args:
+        path_array          :           an array of folder paths to h5 files
+                                        respective of the multiple ports
+
+    
+    Returns:
+        array               :           output of collective ports
+    '''
+
+    # strip array except from port information
+    port_id = [x.split('PORT_')[1][:2] for x in path_array]
+
+    for i in range(len(path_array)):
+        print("Porting {}".format(path_array[i]))
+        if (i==0):
+            tracks = (load_data(path_array[i]))[0]
+            # add on the column for port ID
+            tracks['PORT'] = str(port_id[i])
+        else:
+            nu_tracks = (load_data(path_array[i]))[0]
+            print("Tracks: {}".format(len_events(nu_tracks)))
+            # multiply the events numbers to avoid overlap
+            nu_tracks['event'] = nu_tracks['event'] * (i+1)
+            nu_tracks['PORT'] = str(port_id[i])
+            tracks = tracks.append(nu_tracks)
+
+        print("Done! Tracks available: {}".format(len_events(tracks)))
+    
+    return tracks
+
+
 def cut_effic(df1, df2, verbose = False):
     '''
     Produce efficiency of a single cut by comparison of unique
@@ -412,6 +447,28 @@ def positron_scraper(data_path, save = False):
 
     return pos_df
 
+
+def positron_ports(path_array):
+    '''
+    Collect positron events from multiple ports.
+    Bespoke, use with care.
+    '''
+
+    for i in range(len(path_array)):
+        print("Loading positrons from {}".format(path_array[i]))
+        if (i==0):
+            posi = positron_scraper(path_array[i])
+            # multiply the event numbers to match track values
+            posi['event_id'] = posi['event_id'] * ((i+1)*2)
+        else:
+            nu_posi = positron_scraper(path_array[i])
+            print("Positron events: {}".format(len_events(nu_posi, tag = 'event_id')))
+            # multiple the event numbers to avoid overlap, the *2 is to match it with the tracking values
+            nu_posi['event_id'] = nu_posi['event_id'] * ((i+1)*2)
+            posi = posi.append(nu_posi)
+        print("Port finished! Tracks available: {}".format(len_events(posi, tag = 'event_id')))
+    
+    return posi
 
 def blob_positron_plot(ecut_rel, ecut_no_positron_df, save = False, save_title = 'plot.png'):
     '''
@@ -913,7 +970,6 @@ def scrape_any_data(data_path, string_1, string_2, plot_title):
     hold = pd.HDFStore(data_path)
     store = hold.keys()
     hold.close()
-
     # sanitise
     remove = [x.replace("/", "") for x in store]
     split = [(x.split("_")) for x in remove]
@@ -963,7 +1019,7 @@ def scrape_any_data(data_path, string_1, string_2, plot_title):
     fom_list[np.isnan(fom_list.astype(float))] = 0
     
     fom_list = np.round(fom_list.astype(float), decimals=2)
-    
+
     plot_2Dhist(fom_list, x_vals, y_vals, title = str(plot_title), xlabel_title = 'number of iterations', ylabel_title = 'e_cut')
 
 
@@ -1328,6 +1384,7 @@ def gauss_bck(x, a, mu, sigma, C):
 
 
     return a*np.exp(-numer/denom) + C
+
 
 # and a print function
 def print_parameters(popt,pcov,labels):
