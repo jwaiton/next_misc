@@ -774,7 +774,7 @@ def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
     # sanitise
     ns = fom[2]
     nb = fom[3]
-    fom_error = np.nan_to_num(fom[1])
+    fom_erro = np.nan_to_num(fom[1])
     fom = np.nan_to_num(fom[0])
 
     print("ns, nb")
@@ -785,7 +785,7 @@ def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
     print("FOM values:")
     print(fom)
     print("Errors")
-    print(fom_error)
+    print(fom_erro)
 
     # remove stupid values based on low statistics
     fom[fom > 10] = 0
@@ -798,7 +798,7 @@ def apply_FOM(path, data, cut_list, plot = False, plot_title = " "):
     blob_val = cut_list[max_index]
 
     if (plot == True):
-        plt.errorbar(cut_list, fom, yerr = fom_error)
+        plt.errorbar(cut_list, fom, yerr = fom_erro)
         plt.title(plot_title)
         plt.xlabel("Blob-2 energy threshold (MeV)")
         plt.legend()
