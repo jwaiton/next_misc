@@ -1405,7 +1405,7 @@ def print_parameters(popt,pcov,labels):
 
  
 # plot parameters for fit, similar to plot_hist
-def plot_fit(function, x, popt, popt_label, output = False, colour = 'red', x_counts = 100000, lgnd = 'Fit', popt_text = True):
+def plot_fit(function, x, popt, popt_label, output = False, colour = 'red', x_counts = 100000, lgnd = 'Fit', popt_text = True, linestyle = "solid"):
     '''
     plots a fit based on individual points and a function
     plots across a more continuous space, to reduce weird artifacting for low X numbers
@@ -1418,7 +1418,7 @@ def plot_fit(function, x, popt, popt_label, output = False, colour = 'red', x_co
     x_plot = np.linspace(x_min, x_max, num = x_counts, endpoint = True)
 
     y = function(x_plot, *popt)
-    plt.plot(x_plot, y, label = lgnd, color = colour)
+    plt.plot(x_plot, y, label = lgnd, color = colour, linestyle = linestyle)
     
     # create locations to put the text relative to the scale of the figure
     percentage_hor = 0.01
