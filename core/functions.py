@@ -26,6 +26,7 @@ from scipy.stats import skewnorm
 from scipy.optimize import curve_fit
 import matplotlib.ticker as ticker
 
+from scipy.integrate import quad
 
 
 def plot_hist(df, column = 'energy', binning = 20, title = "Energy plot", output = False, fill = True, label = 'default', x_label = 'energy (MeV)', range = 0, log = True, data = False, save = False, save_dir = '', alpha = 1):
@@ -1437,3 +1438,230 @@ def plot_fit(function, x, popt, popt_label, output = False, colour = 'red', x_co
         plt.show()
     else:
         return
+
+
+
+###########################################################################################
+# NEW FOM FUNCTIONS - 26/04/24!!!
+###########################################################################################
+
+
+
+
+def histogram_fit(fnc, sig_data, binning, p0, fit_labels, bounds = []):
+    '''
+    fit a function from histogram data, return the fitting parameters
+    '''
+
+
+    # Use positron data to collect the C1 and C2 values from the signal fit
+    s_cnts, s_edges, s_patches = plot_hist(sig_data, binning = binning, log = False, data = True)
+
+    
+    s_centres = shift_to_bin_centers(s_edges)
+
+    # FIT
+    if (bounds == []):
+        return curve_fit(fnc, s_centres, s_cnts, p0, maxfev = 500000)
+    else:
+        return curve_fit(fnc, s_centres, s_cnts, p0, maxfev = 500000, bounds = bounds)
+
+def fom_calc_MC(cut_data, positron_data, cut_list, binning = 80, verbose = False):
+    '''
+        calculate FOM via fitting using MC information for C1 and C2
+        start the cut list at non-zero. eg cut_list = [0.1, 0.2, ...]
+    '''
+    # preset some parameters for sanity purposes
+    emin = 1.5
+    emax = 1.7
+
+
+    # select only events in which events have positrons
+    sig_data = cut_data[cut_data['event'].isin(positron_data['event_id'].to_numpy())]
+    bck_data = cut_data[~cut_data['event'].isin(positron_data['event_id'].to_numpy())]
+
+
+    print("Obtaining C1 and C2")
+    #####            C1 AND C2 ACQUISITION          #####
+    # p0 is apriori
+    p0 = ([1, 1, 1.58, 0.3, 0.8, 0])
+    fit_labels = ['B1', 'A', 'mu', 'sigma', 'C1', 'C2']
+    
+    # fit the histogram
+    s_popt, s_pcov = histogram_fit(sig_func, sig_data, binning, p0, fit_labels)
+
+    
+    if (verbose == True):
+        print("=========================== SIGNAL FIT ============================")
+        plot_fit(sig_func, np.linspace(emin, emax, 1000), s_popt, fit_labels)
+        plot_hist(sig_data, binning = 80, title='Signal fit', log = False)
+        plt.show()
+        print_parameters(s_popt, s_pcov, fit_labels)
+    
+    # Set C1 and C2
+    C1 = s_popt[4]
+    C2 = s_popt[5]
+
+    # C1 and C2 control
+    if (C1 < 0):
+        C1 = 0
+    if (C2 < 0):
+        C2 = 0
+
+    print("C1: {}, C2: {}".format(C1, C2))
+
+
+
+    #####           MU AND SIGMA ACQUISITION            #####
+
+    # apriori
+    g_p0 = [500, 1.6, 0.01]
+    g_labels = ['A', 'mu', 'sigma']
+
+    # collect histogram information
+
+    #cnt, edges, patches = plot_hist(cut_data, binning = binning, log = False, data = True)
+    # fit
+    #g_popt, g_pcov = curve_fit(gauss, centres, cnts, g_p0, maxfev = 500000)
+    g_popt, g_pcov = histogram_fit(gauss, cut_data, binning, g_p0, g_labels)
+    # set mu and sigma
+    mu      = g_popt[1]
+    sigma   = g_popt[2]
+
+    print("mu: {}, sigma: {}".format(mu, sigma))
+
+    if (verbose == True):
+        print("=========================== GAUSSIAN FIT ============================")
+        plot_fit(gauss, np.linspace(emin, emax, 1000), g_popt, g_labels)
+        plot_hist(cut_data, binning = 80, title='Gauss fit', log = False)
+        plt.show()
+        print_parameters(g_popt, g_pcov, g_labels)
+
+
+    #####          NS AND NB ACQUISITION                #####
+
+    fixed_sig_bck_func = lambda x, ns, a, nb, tau: sig_bck_func(x, ns, a, mu, sigma, C1, C2, nb, tau)
+
+    # apriori
+    sb_p0 = [400, 1, 20, 0.1]
+    sb_labels = ['ns', 'a', 'nb', 'tau']
+
+    # fit
+    sb_popt, sb_pcov = histogram_fit(fixed_sig_bck_func, cut_data, binning, sb_p0, sb_labels)
+    #sb_popt, sb_pcov = curve_fit(fixed_sig_bck_func, centres, cnts, sb_p0, maxfev = 500000)
+    # take bin widths to calculate number of events
+    _, edges, _ =plot_hist(cut_data, binning = binning, log = False, data = True)
+    bin_width = edges[1] - edges[0]
+    ns0 = quad(sig_func, emin, emax, args = (sb_popt[0],sb_popt[1], mu, sigma, C1, C2))/bin_width
+    nb0 = quad(bck_func, emin, emax, args = (sb_popt[2], sb_popt[3]))/bin_width
+
+    if (verbose == True):
+
+        print("=========================== FULL FIT ============================")
+        plot_fit(fixed_sig_bck_func, np.linspace(emin, emax, 1000), sb_popt, sb_labels)
+        plot_hist(cut_data, binning = 80, title='Full fit', log = False)
+        plt.show()
+        print_parameters(sb_popt, sb_pcov, sb_labels)
+
+        print('ns0      = {}'.format(ns0[0]))
+        print('nb0      = {}'.format(nb0[0]))
+        print("total    = {:.0f}".format(ns0[0]+nb0[0]))
+        print("Event no = {}".format(len(cut_data.index)))
+    
+    
+    # create list for fom values
+    e       = []
+    b       = []
+    ns_l      = []
+    nb_l      = []
+    fom     = []
+    fom_err = []
+    e_err = []
+    b_err = []
+
+    ns_l.append(ns0[0])
+    nb_l.append(nb0[0])
+
+    # wipe variables to stop variable bleed over
+    del g_popt, g_pcov, mu, sigma, sb_popt, sb_pcov, bin_width
+
+    if (verbose == True):
+        print("=========================== ====================== ===========================")
+        print("=========================== BLOB 2 CUT STARTS HERE ===========================")
+        print("=========================== ====================== ===========================")
+
+    for i in range(len(cut_list)):
+
+        print("Applying cut {} MeV".format(cut_list[i]))
+
+        blob_data = cut_data[(cut_data['eblob2'] > cut_list[i])]
+
+        # collect gaussian peak
+        g_popt, g_pcov = histogram_fit(gauss, blob_data, binning, g_p0, g_labels)
+        # set mu and sigma
+        mu      = g_popt[1]
+        sigma   = g_popt[2]
+
+        if (verbose == True):
+            print("=========================== GAUSSIAN FIT ============================")
+            plot_fit(gauss, np.linspace(emin, emax, 1000), g_popt, g_labels)
+            plot_hist(blob_data, binning = 80, title='Gauss fit', log = False)
+            plt.show()
+            print_parameters(g_popt, g_pcov, g_labels)
+
+
+        # collect nb and ns
+        sb_popt, sb_pcov = histogram_fit(fixed_sig_bck_func, blob_data, binning, sb_p0, sb_labels, bounds = ([0, -np.inf, 0, -np.inf],[np.inf, np.inf, np.inf, np.inf]))
+        # take bin widths to calculate number of events
+        _, edges, _ =plot_hist(blob_data, binning = binning, log = False, data = True, output = False)
+        bin_width = edges[1] - edges[0]
+        ns = quad(sig_func, emin, emax, args = (sb_popt[0],sb_popt[1], mu, sigma, C1, C2))/bin_width
+        nb = quad(bck_func, emin, emax, args = (sb_popt[2], sb_popt[3]))/bin_width
+        ns_l.append(ns[0])
+        nb_l.append(nb[0])
+        if (verbose == True):
+
+            print("=========================== FULL FIT ============================")
+            plt.clf()
+            plot_fit(fixed_sig_bck_func, np.linspace(emin, emax, 1000), sb_popt, sb_labels, lgnd='Full fit')
+            plot_fit(bck_func, np.linspace(emin, emax, 1000), sb_popt[-2:], sb_labels[-2:], lgnd='Background fit', colour = 'yellow')#, linestyle = 'dashed')
+
+            # collect all sb_vales
+            s_popt = [sb_popt[0], sb_popt[1], mu, sigma, C1, C2]
+            s_labels = ['ns', 'a', 'mu', 'sigma', 'C1', 'C2']
+            plot_fit(sig_func, np.linspace(emin, emax, 1000), s_popt, s_labels, lgnd='Signal fit', colour= 'green')#, linestyle = 'dashed')
+            
+            
+            plot_hist(blob_data, binning = 80, title='Full fit', log = False, label = 'Data')
+            plt.legend()
+            plt.show()
+            print_parameters(sb_popt, sb_pcov, sb_labels)
+
+            print('ns - {}'.format(ns[0]))
+            print('nb - {}'.format(nb[0]))
+            print("total = {:.0f}".format(ns[0]+nb[0]))
+            print("Event no = {}".format(len(blob_data.index)))
+        
+        e_check = ns[0]/ns0[0]
+        b_check = nb[0]/nb0[0]
+        fom_check = e_check/np.sqrt(b_check)
+
+        e.append(e_check)
+        b.append(b_check)
+        fom.append(fom_check)
+
+        # errors for fom
+        e_err.append(ratio_error(e[i],ns[0],ns0[0],np.sqrt(ns[0]),np.sqrt(ns0[0])))
+        b_err.append(ratio_error(b[i],nb[0],nb0[0],np.sqrt(nb[0]),np.sqrt(nb0[0])))
+        fom_err.append(fom_error(e[i], b[i], e_err[i], b_err[i]))
+
+        if (verbose == True):
+            print('fom - {:.2f} ± {:.2f}'.format(fom_check, fom_err[i]))
+            print('e - {:.2f} ± {:.2f}'.format(e_check, e_err[i]))
+            print('b - {:.2f} ± {:.2f}'.format(b_check, b_err[i]))
+
+        # wipe variables here
+        del blob_data, g_popt, g_pcov, mu, sigma, sb_popt, sb_pcov, ns, nb, bin_width, e_check, b_check, fom_check
+    
+    return (fom, fom_err, ns_l, nb_l)
+
