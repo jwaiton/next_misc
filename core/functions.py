@@ -1333,7 +1333,9 @@ def bck_func(x, nb, tau):
 def skewnorm_func(x, a, mu, sigma):
     return skewnorm.pdf(x, a, loc = mu, scale = sigma)
 
-
+def norm_func(x, a, mu, sigma):
+    # a is just carried over for swapability with skewnorm
+    return norm.pdf(x, loc = mu, scale = sigma)
 
 def error_func(x, mu, sigma):
     pas = (x - mu)/(np.sqrt(2)*sigma)
@@ -1344,6 +1346,11 @@ def error_func(x, mu, sigma):
 def sig_func(x, ns, a, mu, sigma, C1, C2):
     
     return ns * (skewnorm_func(x, a, mu, sigma) + C1*error_func(x, mu, sigma) + C2)
+
+def sig_func_no_N(x, a, mu, sigma, C1, C2):
+    
+    return (skewnorm_func(x, a, mu, sigma) + C1*error_func(x, mu, sigma) + C2)
+
 
 
 
@@ -1438,6 +1445,9 @@ def plot_fit(function, x, popt, popt_label, output = False, colour = 'red', x_co
         plt.show()
     else:
         return
+
+
+
 
 
 
