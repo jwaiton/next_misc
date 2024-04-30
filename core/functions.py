@@ -1328,6 +1328,9 @@ def bck_func(x, nb, tau):
 
     return nb*np.exp(-x/tau)
 
+def bck_func_no_N(x, tau):
+    return np.exp(-x/tau)
+    
 
 
 def skewnorm_func(x, a, mu, sigma):
@@ -1358,6 +1361,12 @@ def sig_bck_func(x, ns, a, mu, sigma, C1, C2, nb, tau):
 
     return bck_func(x, nb, tau) + sig_func(x, ns, a, mu, sigma, C1, C2)
 
+
+def gauss_no_N(x, mu, sigma):
+    numer = np.square(x - mu)
+    denom = 2*np.square(sigma)
+
+    return np.exp(-numer/denom)
 
 # create gaussian initially for testing purposes
 def gauss(x, a, mu, sigma):
