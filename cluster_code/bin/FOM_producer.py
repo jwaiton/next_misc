@@ -50,7 +50,7 @@ def full_monty(path, port, output_folder):
 
     # FIDUCIAL
     lower_z = 20
-    upper_z = 1195
+    upper_z = 1170
     r_lim = 472
 
     # ENERGY CUTS

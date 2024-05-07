@@ -1021,7 +1021,7 @@ def scrape_any_data(data_path, string_1, string_2, plot_title):
     
     fom_list = np.round(fom_list.astype(float), decimals=2)
 
-    plot_2Dhist(fom_list, x_vals, y_vals, title = str(plot_title), xlabel_title = 'number of iterations', ylabel_title = 'e_cut')
+    plot_2Dhist(fom_list, x_vals, y_vals, title = str(plot_title), xlabel_title = 'e_cut', ylabel_title = 'number of iterations')
 
 
 
