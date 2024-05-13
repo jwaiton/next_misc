@@ -26,6 +26,9 @@ from scipy.stats import skewnorm
 from scipy.optimize import curve_fit
 import matplotlib.ticker as ticker
 
+# timekeeping
+from tqdm import tqdm
+
 from scipy.integrate import quad
 
 
@@ -371,6 +374,28 @@ def len_events(df, tag = 'event'):
     length_1 = df[tag].nunique()
     return length_1
 
+def from_file_positron(file):
+    """
+    Function that takes an individual file and spits out a dataframe
+    with exclusively positron events
+
+    Args:
+        file        :       .h5 file with path
+    
+    Returns:
+        pos_df      :       positron dataframe
+    """
+
+
+    # load in file
+    MC_df = pd.read_hdf(file, 'MC/particles')
+    evt_map = (mcio.load_eventnumbermap(file).set_index('nexus_evt'))
+
+    pos_data = MC_df[MC_df['particle_name'] == 'e+']
+
+        
+    return pos_data
+
 
 def positron_scraper(data_path, save = False):
     """
@@ -470,6 +495,104 @@ def positron_ports(path_array):
         print("Port finished! Tracks available: {}".format(len_events(posi, tag = 'event_id')))
     
     return posi
+
+def numb_of_signal_events(data_path, fid = False, lower_z = 20, upper_z = 1170, r_lim = 415):
+    '''
+    Scans through all files, collects number of signal events available.
+    Fiducial tag exists, but currently doesn't work (the MC exists everywhere, 
+    so fiducial cuts don't mean anything)
+    '''
+
+    try:
+        file_names = [f for f in os.listdir(data_path) if os.path.isfile(os.path.join(data_path, f)) and f.endswith('.h5')]
+    except:
+        print("File path incorrect, please state the correct file path\n(but not any particular folder!)")
+
+    event_id_list = []
+    total_id_list = []
+
+    for file in tqdm(file_names):
+        double_escape_IDs = []
+        file_path = data_path + file
+        # read in file
+        #data = dstio.load_dst(file_path, 'RECO', 'Events')
+        df_ps = pd.read_hdf(file_path, 'MC/particles')
+
+        # collect fiducial info
+        if (fid == True):
+            true_info = mcio.load_mchits_df(file_path).reset_index()
+
+        event_list = (df_ps['event_id'].unique())
+        total_id_list.append(event_list)
+
+        pos_df = from_file_positron(file_path)
+        signal_id = pos_df['event_id'].to_numpy()
+        for i in range(len(signal_id)):
+            
+            # select specific event
+            signal_data = pos_df[pos_df['event_id'] == signal_id[i]]
+            #display(signal_data)
+            df_ps_data = df_ps[df_ps['event_id'] == signal_id[i]]
+            mother_id_pos = signal_data.particle_id.to_numpy()[0]
+            positron_children = df_ps_data[df_ps_data['mother_id'] == mother_id_pos]
+            #display(positron_children)
+            # collect the annihilation gammas
+            annihilation_gamma_id = positron_children[positron_children['creator_proc'] == 'annihil'].particle_id.to_numpy()
+            #display(annihilation_gamma_id)
+            for j in range(len(annihilation_gamma_id)):
+
+                # check fiducial limits
+                if (fid == True):
+                    fid_evt = true_info[true_info['event_id'] == signal_id[i]]
+                    fid_evt = fid_evt[fid_evt['label'] == 'ACTIVE']
+
+                    zMin = np.min(fid_evt.z.to_numpy())
+                    zMax = np.max(fid_evt.z.to_numpy())
+
+                    r    = np.sqrt((fid_evt.x)**2 + (fid_evt.y)**2)
+
+                    rMax = np.max(r)
+
+                    # if outside fiducial (at any point), break
+                    if ((zMin < lower_z) or (zMax > upper_z) or(rMax > r_lim)):
+                        break
+                    else:
+                        continue
+
+
+
+
+                # check the two gammas children, they better not exist
+                gamma_children = (df_ps_data[df_ps_data['mother_id'] == annihilation_gamma_id[j]])
+                #display(gamma_children)
+                # check that no events occur from the children within ACTIVE
+                gamma_active = gamma_children[gamma_children['initial_volume'] == 'ACTIVE']
+                gamma_active = gamma_children[gamma_children['final_volume'] == 'ACTIVE']
+                if len(gamma_active.index) == 0:
+                    double_escape_IDs.append(signal_id[i])
+                else:
+                    #print("Event {} not double-photo, remove...".format(signal_id[i]))
+                    # kill it
+                    if (j == 0):
+                        break
+                    elif (j == 1):
+                        # remove previous double_escape_ID event from list
+                        double_escape_IDs.remove(signal_id[i])
+
+
+
+        double_escape_IDs = np.unique(np.array(double_escape_IDs))
+        event_id_list.append(double_escape_IDs)
+    
+    # flatten lists
+    flat_double_escape = [j for sub in event_id_list for j in sub]
+    flat_total = [j for sub in total_id_list for j in sub]
+
+    print("{}/{} events with double photo-escape".format(len(flat_double_escape), len(flat_total)))
+    print("")
+    print("{:.2f}% of events within file are signal events\n      within our energy region".format((len(flat_double_escape)/len(flat_total))*100))
+    return (flat_double_escape, flat_total)
+
 
 def blob_positron_plot(ecut_rel, ecut_no_positron_df, save = False, save_title = 'plot.png'):
     '''
