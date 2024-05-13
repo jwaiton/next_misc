@@ -1,9 +1,11 @@
 import sys,os,os.path
 
-sys.path.append("/gluster/data/next/software/IC_sophronia")   # cite IC from parent directory
+## CHANGE THESE LINES BASED ON WHERE YOUR IC DIRECTORY IS
+#sys.path.append("/gluster/data/next/software/IC_sophronia")
+#os.environ['ICTDIR']='/gluster/data/next/software/IC_sophronia/IC'
+sys.path.append("/home/e78368jw/Documents/NEXT_CODE/")   # cite IC from parent directory
 sys.path.append(os.path.expanduser('~/code/eol_hsrl_python'))
-os.environ['ICTDIR']='/gluster/data/next/software/IC_sophronia/IC'
-
+os.environ['ICTDIR']='/home/e78368jw/Documents/NEXT_CODE/IC'
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy  as np
@@ -418,7 +420,8 @@ def process_data(path):
     print("Applying Cuts...")
 
     # remove low energy satellites first
-    low_e_cut_tracks = remove_low_E_events(tracks)
+    low_e_cut_tracks = tracks[tracks.energy > 0.05]
+    
 
 
     # Efficiency calculation
@@ -442,9 +445,9 @@ def process_data(path):
     cut_names.append("Fiducial Cuts")
 
     # make fiducial cuts
-    fiducial_rel = fiducial_track_cut_2(low_e_cut_tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = False)
+    fiducial_rel = fiducial_track_cut_2(low_e_cut_tracks, lower_z = 20, upper_z=1170, r_lim = 415, verbose = False)
 
-    fiducial_abs = fiducial_track_cut_2(tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = True)
+    fiducial_abs = fiducial_track_cut_2(tracks, lower_z = 20, upper_z=1170, r_lim = 415, verbose = True)
 
     # make efficiency calculation
     print("Fiducial track cut")
@@ -567,7 +570,7 @@ def process_data(path):
     # number of events that are positrons
     ecut_positron_df = ecut_rel[ecut_rel['event'].isin(pos_events)]
     ecut_no_positron_df = ecut_rel[~ecut_rel['event'].isin(pos_events)]
-    cut_list = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]
+    cut_list = np.linspace(0, 0.6, 61)
     fom = true_fom_calc(ecut_positron_df, ecut_no_positron_df, cut_list)
     # sanitise
     fom = np.nan_to_num(fom)
