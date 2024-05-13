@@ -51,7 +51,7 @@ def full_monty(path, port, output_folder):
     # FIDUCIAL
     lower_z = 20
     upper_z = 1170
-    r_lim = 472
+    r_lim = 415
 
     # ENERGY CUTS
     lower_e = 1.5
@@ -68,44 +68,53 @@ def full_monty(path, port, output_folder):
     print("Opening files...")
     # load data from path
     dire = path + "PORT_" + str(port) + "/isaura/"
+    efficiency_dire = path + "PORT_" + str(port) + "/output/"
+    
+    # try to collect efficiency explicitly
     try:
-        data = func.load_data(dire)
+        print("Collecting efficiencies from:\n{}".format(efficiency_dire))
+        efficiencies = pd.read_csv(efficiency_dire + 'efficiency.csv')
+        efficiencies = efficiencies.drop('Unnamed: 0', axis = 1)
     except:
-        print("No data found for directory:\n{}\nSkipping...".format(dire))
-        return 0
+        print("Efficiencies not explicitly found, reprocessing...")
+        try:
+            data = func.load_data(dire)
+        except:
+            print("No data found for directory:\n{}\nSkipping...".format(dire))
+            return 0
 
-    tracks      = data[0]
-    particles   = data[1]
-    eventmap    = data[2]
+        tracks      = data[0]
+        particles   = data[1]
+        eventmap    = data[2]
 
-    print("Applying cuts")
+        print("Applying cuts")
 
-    # removing satellite tracks
-    low_e_cut_tracks = func.remove_low_E_events(tracks, energy_limit)
+        # removing satellite tracks
+        low_e_cut_tracks = func.remove_low_E_events(tracks, energy_limit)
 
-    # apply cuts
-    cut_output = func.apply_cuts(low_e_cut_tracks, lower_z, upper_z, r_lim, lower_e, upper_e)
-    cut_data = cut_output[0]
-    efficiencies = cut_output[1]
+        # apply cuts
+        cut_output = func.apply_cuts(low_e_cut_tracks, lower_z, upper_z, r_lim, lower_e, upper_e)
+        cut_data = cut_output[0]
+        efficiencies = cut_output[1]
 
-    print("Calculating FOM")
+        print("Calculating FOM")
 
-    # calculate FOM
-    fom_output = func.apply_FOM(dire, cut_data, cut_list)
+        # calculate FOM
+        fom_output = func.apply_FOM(dire, cut_data, cut_list)
 
-    # apply them to the efficiencies
-    efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', fom_output[0], len(cut_data), 0]
-    efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', fom_output[2], fom_output[3], 0]
-    efficiencies.loc[len(efficiencies.index)] = ['trk_no - satellite_no', len(tracks.index), len(tracks.index) - len(low_e_cut_tracks.index), 0]
+        # apply them to the efficiencies
+        efficiencies.loc[len(efficiencies.index)] = ['pos_evt - all_evt', fom_output[0], len(cut_data), 0]
+        efficiencies.loc[len(efficiencies.index)] = ['FOM_MAX - blob2_E_val (MeV)', fom_output[2], fom_output[3], 0]
+        efficiencies.loc[len(efficiencies.index)] = ['trk_no - satellite_no', len(tracks.index), len(tracks.index) - len(low_e_cut_tracks.index), 0]
 
-    # write to respective directories
-    out_dir = path+output_folder
-    if not os.path.isdir(out_dir):
-        os.mkdir(out_dir)
-    efficiencies.to_csv(str(out_dir) + '/efficiency.csv')
-    # Save the data to a h5 file
-    cut_data.to_hdf(str(out_dir) + '/post_cuts.h5', key='cut_data', mode = 'w')
-    print("Data written")
+        # write to respective directories
+        out_dir = path+output_folder
+        if not os.path.isdir(out_dir):
+            os.mkdir(out_dir)
+        efficiencies.to_csv(str(out_dir) + '/efficiency.csv')
+        # Save the data to a h5 file
+        cut_data.to_hdf(str(out_dir) + '/post_cuts.h5', key='cut_data', mode = 'w')
+        print("Data written")
 
     # fom output is POSITRON EVENTS, TOTAL EVENTS, MAX_FOM, blob val at max fom
     return (efficiencies)
