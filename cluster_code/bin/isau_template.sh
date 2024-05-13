@@ -8,7 +8,7 @@ INPUT_1=$2   # xy voxel space
 INPUT_2=$3   # z voxel space
 INPUT_3=$4   # blob radius
 INPUT_4=$5   # port value
-PORT=$INPUT_4
+PORT="${INPUT_4}"
 
 echo "Applying voxel size: ${INPUT_1} x ${INPUT_1} x ${INPUT_2}"
 echo "Applying blob radius: ${INPUT_3}"
@@ -62,7 +62,7 @@ echo "Macro started"
 
 #### CONFIG FILE
 # set paths
-echo "files_in = '${INFILE}'  "                                 > ${CFG_MACRO_ISAURA}
+echo "files_in = '${INFILE}'  "                                 > ${CFG_MACRO_ISAURA} # a singular arrow here makes it such that it overwrites the file, the rest will append
 echo "file_out = '${ISAUFILE}'  "                                >> ${CFG_MACRO_ISAURA}
 
 # compression library
