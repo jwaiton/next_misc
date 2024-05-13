@@ -1,0 +1,8 @@
+,Cut,Relative Efficiency,Relative Events,Single Cut Efficiency
+0,No cuts,100.0,778.0,100.0
+1,Fiducial Cuts,61.5681233933162,479.0,61.5681233933162
+2,One track cut,78.91440501043841,378.0,70.69408740359897
+3,Blob overlap cuts,58.46560846560847,221.0,47.943444730077125
+4,Energy cuts,0.0,0.0,0.0
+5,pos_evt - all_evt,0.0,0.0,0.0
+6,FOM_MAX - blob2_E_val (MeV),0.0,0.0,0.0
