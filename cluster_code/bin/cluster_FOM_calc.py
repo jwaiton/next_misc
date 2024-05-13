@@ -420,8 +420,7 @@ def process_data(path):
     print("Applying Cuts...")
 
     # remove low energy satellites first
-    low_e_cut_tracks = tracks[tracks.energy > 0.05]
-    
+    low_e_cut_tracks = remove_low_E_events(tracks)
 
 
     # Efficiency calculation
@@ -445,9 +444,9 @@ def process_data(path):
     cut_names.append("Fiducial Cuts")
 
     # make fiducial cuts
-    fiducial_rel = fiducial_track_cut_2(low_e_cut_tracks, lower_z = 20, upper_z=1170, r_lim = 415, verbose = False)
+    fiducial_rel = fiducial_track_cut_2(low_e_cut_tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = False)
 
-    fiducial_abs = fiducial_track_cut_2(tracks, lower_z = 20, upper_z=1170, r_lim = 415, verbose = True)
+    fiducial_abs = fiducial_track_cut_2(tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = True)
 
     # make efficiency calculation
     print("Fiducial track cut")
@@ -570,7 +569,7 @@ def process_data(path):
     # number of events that are positrons
     ecut_positron_df = ecut_rel[ecut_rel['event'].isin(pos_events)]
     ecut_no_positron_df = ecut_rel[~ecut_rel['event'].isin(pos_events)]
-    cut_list = np.linspace(0, 0.6, 61)
+    cut_list = np.linspace(0,0.6,61)
     fom = true_fom_calc(ecut_positron_df, ecut_no_positron_df, cut_list)
     # sanitise
     fom = np.nan_to_num(fom)
