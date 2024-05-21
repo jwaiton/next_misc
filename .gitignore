@@ -29,3 +29,4 @@ FOM_cluster_output/iterecut_test-PORT_1a/*
 cut_hist.png
 raw_hist.png
 miscellaneous/plots_dodgy_events/*
+*.png
