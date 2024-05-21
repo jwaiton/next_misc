@@ -542,22 +542,22 @@ def numb_of_signal_events(data_path, fid = False, lower_z = 20, upper_z = 1170, 
             for j in range(len(annihilation_gamma_id)):
 
                 # check fiducial limits
-                if (fid == True):
-                    fid_evt = true_info[true_info['event_id'] == signal_id[i]]
-                    fid_evt = fid_evt[fid_evt['label'] == 'ACTIVE']
+                #if (fid == True):
+                #    fid_evt = true_info[true_info['event_id'] == signal_id[i]]
+                #    fid_evt = fid_evt[fid_evt['label'] == 'ACTIVE']
 
-                    zMin = np.min(fid_evt.z.to_numpy())
-                    zMax = np.max(fid_evt.z.to_numpy())
+                #    zMin = np.min(fid_evt.z.to_numpy())
+                #    zMax = np.max(fid_evt.z.to_numpy())
 
-                    r    = np.sqrt((fid_evt.x)**2 + (fid_evt.y)**2)
+                #    r    = np.sqrt((fid_evt.x)**2 + (fid_evt.y)**2)
 
-                    rMax = np.max(r)
+                #    rMax = np.max(r)
 
-                    # if outside fiducial (at any point), break
-                    if ((zMin < lower_z) or (zMax > upper_z) or(rMax > r_lim)):
-                        break
-                    else:
-                        continue
+                #    # if outside fiducial (at any point), break
+                #    if ((zMin < lower_z) or (zMax > upper_z) or(rMax > r_lim)):
+                #        break
+                #    else:
+                #        continue
 
 
 
@@ -566,8 +566,10 @@ def numb_of_signal_events(data_path, fid = False, lower_z = 20, upper_z = 1170, 
                 gamma_children = (df_ps_data[df_ps_data['mother_id'] == annihilation_gamma_id[j]])
                 #display(gamma_children)
                 # check that no events occur from the children within ACTIVE
-                gamma_active = gamma_children[gamma_children['initial_volume'] == 'ACTIVE']
-                gamma_active = gamma_children[gamma_children['final_volume'] == 'ACTIVE']
+                gamma_active_1 = gamma_children[gamma_children['initial_volume'] == 'ACTIVE']
+                gamma_active_2 = gamma_children[gamma_children['final_volume'] == 'ACTIVE']
+                frames = [gamma_active_1, gamma_active_2]
+                gamma_active = pd.concat(frames)
                 if len(gamma_active.index) == 0:
                     double_escape_IDs.append(signal_id[i])
                 else:
