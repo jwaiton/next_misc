@@ -1,0 +1,22 @@
+executable      = bin/collate_HPR.sh 
+request_memory  = 512M
+request_cpus    = 1
+request_disk    = 5G
+initialdir	= $ENV(HOME)/scripts
+
+ITER=75
+E_CUT=9e-3
+PORT=1a
+
+output          = out/HPR/out/HPR.$(ClusterId)-$(Process)-$(ITER)-$(E_CUT).out
+error           = out/HPR/err/HPR.$(ClusterId)-$(Process)-$(ITER)-$(E_CUT).err
+log             = out/HPR/log/HPR.$(ClusterId)-$(Process)-$(ITER)-$(E_CUT).log
+arguments = $(Process) $(ITER) $(E_CUT) $(PORT)
+
+max_idle = 100
+
+should_transfer_files = yes
+when_to_transfer_output = ON_EXIT
+
+queue 300
+
