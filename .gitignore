@@ -30,3 +30,8 @@ cut_hist.png
 raw_hist.png
 miscellaneous/plots_dodgy_events/*
 *.png
+*.gif
+miscellaneous/mark_stuff/
+*.npy
+miscellaneous/reworded_IC/
+*.csv
