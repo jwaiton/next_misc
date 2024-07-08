@@ -1,0 +1,17 @@
+executable      = bin/cluster_FOM_run.sh
+request_memory  = 512M
+request_cpus    = 1
+request_disk    = 5G
+initialdir      = $ENV(HOME)/scripts
+
+PORT=1b
+
+output          = out/HPR/out/FOM_produce.$(ClusterId)-$(Process)-$(PORT).out
+error           = out/HPR/err/FOM_produce.$(ClusterId)-$(Process)-$(PORT).err
+log             = out/HPR/log/FOM_produce.$(ClusterId)-$(Process)-$(PORT).log
+arguments = $(PORT)
+
+should_transfer_files = yes
+when_to_transfer_output = ON_EXIT
+
+queue
