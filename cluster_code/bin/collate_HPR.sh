@@ -59,7 +59,7 @@ source /gluster/data/next/software/IC_sophronia/config_ic.sh
 echo "IC sourced"
 
 # for running the FOM
-DIRECTORY="/gluster/data/next/files/TOPOLOGY_John/HPR_PARAMETER_CHECK/DATA/PORT_${PORT}/"
+DIRECTORY="/gluster/data/next/files/TOPOLOGY_John/HPR_PARAMETER_CHECK/data/PORT_${PORT}/"
 
 #############################
 # SOPHRONIA MACRO AND RUNTIME
@@ -237,7 +237,7 @@ city isaura ${CFG_MACRO_ISAURA}
 
 # if the last process (300), produce FOM
 echo "Isaura done!"
-if [ "$NUMBER" -eq 300 ]; then
+if [ "$NUMBER" -eq 660 ]; then
 	# pause out of fear that the other jobs aren't finished
 	sleep 600
 	echo "Producing FOM..."
