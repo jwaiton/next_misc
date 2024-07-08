@@ -1,11 +1,9 @@
 import sys,os,os.path
 
-## CHANGE THESE LINES BASED ON WHERE YOUR IC DIRECTORY IS
-#sys.path.append("/gluster/data/next/software/IC_sophronia")
-#os.environ['ICTDIR']='/gluster/data/next/software/IC_sophronia/IC'
-sys.path.append("/home/e78368jw/Documents/NEXT_CODE/")   # cite IC from parent directory
+sys.path.append("/gluster/data/next/software/IC_sophronia")   # cite IC from parent directory
 sys.path.append(os.path.expanduser('~/code/eol_hsrl_python'))
-os.environ['ICTDIR']='/home/e78368jw/Documents/NEXT_CODE/IC'
+os.environ['ICTDIR']='/gluster/data/next/software/IC_sophronia/IC'
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy  as np
@@ -208,7 +206,8 @@ def remove_low_E_events(df, energy_limit = 0.05):
     Remove low energy tracks, add their energy back to the first
     track and then update 'numb_of_tracks' to be up to date
     '''
-
+    
+    '''
     tracks_test = df.copy(deep=True)
 
     # take events with lower than 50 keV, 0.05 MeV
@@ -222,11 +221,15 @@ def remove_low_E_events(df, energy_limit = 0.05):
 
     # drop energy sum column
     result_df = merged_df.drop('energy_sum', axis = 1)
-
+    
     # then remove all tracks below the energy threshold
     condition_upper = (result_df.energy > energy_limit)
     remove_low_E = result_df[condition_upper]
+    ''' # currently this is all removed, and instead the low energy tracks are annihilated.
 
+    # remove all tracks below energy threshold
+    condition_upper = (result_df.energy > energy_limit)
+    remove_low_E = result_df[condition_upper]
     # count the number of events identified with unique event, and change numb_of_tracks to reflect this
     event_counts = remove_low_E['event'].value_counts(sort = False)
 
@@ -402,7 +405,13 @@ def true_fom_calc(p_data, no_p_data, cut_list, verbose = False):
 ###########################################################################################
 ###########################################################################################
 
-def process_data(path):
+def process_data(folder_path):
+    
+    # define your parameters here #
+    upp_z = 1170            # FIDUCIAL
+    low_z = 20  
+    r_limit = 415
+    
 
     print("Opening files...")
     # load and unpack data, assume you're sitting in the PORT_XX folder
@@ -420,9 +429,12 @@ def process_data(path):
     print("Applying Cuts...")
 
     # remove low energy satellites first
-    low_e_cut_tracks = remove_low_E_events(tracks)
+    low_e_cut_tracks = tracks[tracks.energy > 0.05]
+    # count the number of events identified with unique event, and change numb_of_tracks to reflect this
+    event_counts = low_e_cut_tracks['event'].value_counts(sort = False)
 
-
+    # apply this to numb_of_tracks
+    low_e_cut_tracks['numb_of_tracks'] = low_e_cut_tracks['event'].map(event_counts)
     # Efficiency calculation
     cut_names = []
     rel_cut_effics = []
@@ -434,7 +446,7 @@ def process_data(path):
     rel_cut_effics.append(100)
     abs_cut_effics.append(100)
     # number of events
-    cut_events.append(len_events(tracks))
+    cut_events.append(len_events(low_e_cut_tracks))
 
 
     #####################################################################
@@ -444,9 +456,9 @@ def process_data(path):
     cut_names.append("Fiducial Cuts")
 
     # make fiducial cuts
-    fiducial_rel = fiducial_track_cut_2(low_e_cut_tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = False)
+    fiducial_rel = fiducial_track_cut_2(low_e_cut_tracks, lower_z = low_z, upper_z=upp_z, r_lim = r_limit, verbose = False)
 
-    fiducial_abs = fiducial_track_cut_2(tracks, lower_z = 20, upper_z=1195, r_lim = 472, verbose = True)
+    fiducial_abs = fiducial_track_cut_2(low_e_cut_tracks, lower_z = low_z, upper_z=upp_z, r_lim = r_limit, verbose = True)
 
     # make efficiency calculation
     print("Fiducial track cut")
@@ -457,7 +469,7 @@ def process_data(path):
     cut_events.append(len_events(fiducial_rel))
 
     print('Absolute Cut efficiency:')
-    ef = cut_effic(fiducial_abs, tracks)
+    ef = cut_effic(fiducial_abs, low_e_cut_tracks)
     abs_cut_effics.append(ef)
 
 
@@ -469,7 +481,7 @@ def process_data(path):
     one_track_rel = one_track_cuts(fiducial_rel, verbose = False)
 
     # events are relative, as absolute efficiency lets you figure out events from the beginning# absolute
-    one_track_abs = one_track_cuts(tracks)
+    one_track_abs = one_track_cuts(low_e_cut_tracks)
 
     # relative
     print("One track cut")
@@ -481,7 +493,7 @@ def process_data(path):
 
     # absolute
     print("Absolute Cut efficiency:")
-    ef = cut_effic(one_track_abs, tracks)
+    ef = cut_effic(one_track_abs, low_e_cut_tracks)
     abs_cut_effics.append(ef)
 
 
@@ -491,7 +503,7 @@ def process_data(path):
 
     # apply cuts
     ovlp_rel = overlapping_cuts(one_track_rel)
-    ovlp_abs = overlapping_cuts(tracks)
+    ovlp_abs = overlapping_cuts(low_e_cut_tracks)
 
 
     cut_names.append("Blob overlap cuts")
@@ -507,7 +519,7 @@ def process_data(path):
 
     # absolute
     print("Absolute Cut efficiency:")
-    ef = cut_effic(ovlp_abs, tracks)
+    ef = cut_effic(ovlp_abs, low_e_cut_tracks)
     abs_cut_effics.append(ef)
 
 
@@ -515,7 +527,7 @@ def process_data(path):
     #####################################################################
 
     ecut_rel = energy_cuts(ovlp_rel)
-    ecut_abs = energy_cuts(tracks)
+    ecut_abs = energy_cuts(low_e_cut_tracks)
 
     cut_names.append("Energy cuts")
 
@@ -530,7 +542,7 @@ def process_data(path):
 
     # absolute
     print("Absolute Cut efficiency:")
-    ef = cut_effic(ecut_abs, tracks)
+    ef = cut_effic(ecut_abs, low_e_cut_tracks)
     abs_cut_effics.append(ef)
 
 
@@ -562,8 +574,12 @@ def process_data(path):
 
     print("Calculating FOM")
 
+    # modification for collecting positron events using the new signal collection file
+    posi_dir = '/gluster/data/next/notebooks/john_books/soph_df_data/'
+    positron_events = pd.read_hdf(posi_dir + 'Tl_signal_true_info.h5')
+
     # collect positron events
-    positron_events = positron_scraper(str(folder_path) + 'isaura/')
+    ###positron_events = positron_scraper(str(folder_path) + 'isaura/')
     pos_events = (np.unique(positron_events['event_id'].to_numpy()))*2
 
     # number of events that are positrons
@@ -576,6 +592,8 @@ def process_data(path):
 
     print("FOM values:")
     print(fom)
+    print("Cut list:")
+    print(cut_list)
 
     # remove stupid values based on low statistics
     fom[fom > 10] = 0
