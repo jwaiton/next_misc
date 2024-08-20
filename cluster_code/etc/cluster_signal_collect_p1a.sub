@@ -1,0 +1,23 @@
+executable      = bin/cluster_signal_collect.sh 
+request_memory  = 512M
+request_cpus    = 1
+request_disk    = 5G
+initialdir	= $ENV(HOME)/scripts
+
+INPUT_D=/gluster/data/next/files/TOPOLOGY_John/HPR_PARAMETER_CHECK/data/
+OUTPUT_D=/gluster/data/next/notebooks/john_books/soph_df_data/HPR/
+PORT=1a
+
+
+output          = out/signal_id/out/signal_id.$(ClusterId)-$(Process).out
+error           = out/signal_id/err/signal_id.$(ClusterId)-$(Process).err
+log             = out/signal_id/log/signal_id.$(ClusterId)-$(Process).log
+arguments = $(INPUT_D) $(OUTPUT_D) $(PORT)
+
+max_idle = 100
+
+should_transfer_files = yes
+when_to_transfer_output = ON_EXIT
+
+queue
+
