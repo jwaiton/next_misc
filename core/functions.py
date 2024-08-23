@@ -13,6 +13,8 @@ sys.path.append("../../") # if you move files around, you need to adjust this!
 sys.path.append(os.path.expanduser('~/code/eol_hsrl_python'))
 os.environ['ICTDIR']='/home/e78368jw/Documents/NEXT_CODE/IC'
 
+from concurrent.futures import ProcessPoolExecutor
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy  as np
@@ -142,6 +144,74 @@ def load_data(folder_path):
     # create particle list also
 
     return (tracks, particles, eventmap)
+
+
+
+
+def load_single_file(file_path):
+    '''
+    Load data from a single h5 file and produce dataframes for /Tracking/Tracks, /MC/Particles, and their corresponding eventmap.
+
+    Args:
+        file_path       :       str
+                                Path to the h5 file to be loaded.
+
+    Returns:
+        tracks_df       :       pandas.DataFrame
+                                DataFrame containing the /Tracking/Tracks data.
+        
+        particles_df    :       pandas.DataFrame
+                                DataFrame containing the /MC/particles data, with the 'event_id' column modified.
+
+        eventmap_df     :       pandas.DataFrame
+                                DataFrame containing the event map, indexed by 'nexus_evt'.
+    '''
+
+    tracks_df = dstio.load_dst(file_path, 'Tracking', 'Tracks')
+    particles_df = pd.read_hdf(file_path, 'MC/particles')
+    eventmap_df = mcio.load_eventnumbermap(file_path).set_index('nexus_evt')
+    
+    # Modify particles data
+    particles_df['event_id'] = particles_df['event_id'] * 2
+    
+    return tracks_df, particles_df, eventmap_df
+
+def load_data_fast(folder_path):
+    '''
+    Load multiple h5 files and produce concatenated dataframes for /Tracking/Tracks, /MC/Particles, and their corresponding eventmap.
+
+    Args:
+        folder_path     :       str
+                                Path to the folder containing the h5 files.
+
+    Returns:
+        tracks          :       pandas.DataFrame
+                                Concatenated DataFrame containing the /Tracking/Tracks data from all h5 files.
+        
+        particles       :       pandas.DataFrame
+                                Concatenated DataFrame containing the /MC/particles data from all h5 files, with the 'event_id' column modified.
+
+        eventmap        :       pandas.DataFrame
+                                Concatenated DataFrame containing the event map from all h5 files.
+    '''
+    
+    file_names = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
+    file_paths = [os.path.join(folder_path, f) for f in file_names]
+
+    # Use ProcessPoolExecutor to parallelize the data loading process
+    with ProcessPoolExecutor() as executor:
+        results = list(executor.map(load_single_file, file_paths))
+    
+    # Separate the results into respective lists
+    tracks_list, particles_list, eventmap_list = zip(*results)
+
+    # Concatenate all the dataframes at once
+    tracks = pd.concat(tracks_list, axis=0, ignore_index=True)
+    particles = pd.concat(particles_list, ignore_index=True)
+    eventmap = pd.concat(eventmap_list, ignore_index=True)
+
+    return tracks, particles
+
 
 def collate_ports(path_array):
     '''
