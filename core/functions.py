@@ -7,7 +7,7 @@ Any time I need to use a function, I'm adding it to this stupidly long list of f
 '''
 
 
-
+import re
 import sys,os,os.path
 sys.path.append("../../") # if you move files around, you need to adjust this!
 sys.path.append(os.path.expanduser('~/code/eol_hsrl_python'))
@@ -1879,3 +1879,29 @@ def fom_calc_MC(cut_data, positron_data, cut_list, binning = 80, verbose = False
     
     return (fom, fom_err, ns_l, nb_l)
 
+
+# human sorting
+def tryint(s):
+    """
+    Return an int if possible, or `s` unchanged.
+    """
+    try:
+        return int(s)
+    except ValueError:
+        return s
+
+def alphanum_key(s):
+    """
+    Turn a string into a list of string and number chunks.
+
+    >>> alphanum_key("z23a")
+    ["z", 23, "a"]
+
+    """
+    return [ tryint(c) for c in re.split('([0-9]+)', s) ]
+
+def human_sort(l):
+    """
+    Sort a list in the way that humans expect.
+    """
+    l.sort(key=alphanum_key)
