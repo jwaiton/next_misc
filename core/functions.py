@@ -145,8 +145,29 @@ def load_data(folder_path):
 
     return (tracks, particles, eventmap)
 
+def load_sophronia_file(file_path):
+
+    return (pd.read_hdf(file_path, 'RECO/Events'), pd.read_hdf(file_path, 'DST/Events'))
 
 
+def load_sophronia_fast(folder_path):
+
+    # parallelise 
+    file_names = [f for f in os.listdir(folder_path) if f.endswith('.h5')]
+    file_paths = [os.path.join(folder_path, f) for f in file_names]
+
+    # Use ProcessPoolExecutor to parallelize the data loading process
+    with ProcessPoolExecutor() as executor:
+        results = list(executor.map(load_sophronia_file, file_paths))
+
+    # Separate the results into respective lists
+    reco, dst = zip(*results)
+
+    # Concatenate all the dataframes at once
+    reco = pd.concat(reco, axis=0, ignore_index=True)
+    dst = pd.concat(dst, ignore_index=True)
+
+    return reco, dst
 
 def load_single_file(file_path):
     '''
