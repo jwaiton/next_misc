@@ -35,3 +35,4 @@ miscellaneous/mark_stuff/
 *.npy
 miscellaneous/reworded_IC/
 *.csv
+localdb.NEXT100DB.sqlite3
