@@ -36,3 +36,4 @@ miscellaneous/mark_stuff/
 miscellaneous/reworded_IC/
 *.csv
 localdb.NEXT100DB.sqlite3
+*.pdf
