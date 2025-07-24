@@ -3,6 +3,7 @@ import subprocess
 from multiprocessing import Pool
 from functools import partial
 import time as t
+import shutil
 
 ### A remake of the mother script (automate_processing.py)
 # this will do all the same things, but through a login node on tmux
@@ -30,6 +31,73 @@ unset __conda_setup
 # <<< conda initialize <<<
 """
 
+def topology_slurm_template(RUN,
+                          TIMESTAMP,
+                          INPT_TIMESTAMP,
+                          LDC,
+                          CITY,
+                          job_name, 
+                          script_path, 
+                          output_path, 
+                          error_path,
+                          partition, 
+                          time, 
+                          nodes, 
+                          ntasks, 
+                          cpus_per_task, 
+                          mem,
+                          blobR,
+                          scanR,
+                          voxelS):
+    slurm_content = f"""#!/bin/bash
+#!/bin/bash
+#SBATCH --partition={partition}
+#SBATCH --qos=regular
+#SBATCH --job-name={job_name}
+#SBATCH --time={time}
+#SBATCH --nodes={nodes}
+#SBATCH --ntasks={ntasks}
+#SBATCH --cpus-per-task={cpus_per_task}
+#SBATCH --mem={mem}
+
+#SBATCH --error=errors_topology/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.err
+#SBATCH --output=logs_topology/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.out
+#SBATCH --mail-user=john.waiton@postgrad.manchester.ac.uk
+#SBATCH --mail-type=ALL
+
+{init_conda}
+
+
+echo "Slurm job id is ${{SLURM_JOB_ID}}"
+
+
+RUN={RUN}
+TIMESTAMP={TIMESTAMP}
+CITY={CITY}
+z_lower=20
+z_upper=1195
+r_lim=450
+e_lower=1.45
+e_upper=1.75
+
+echo "======================="
+echo "RUN {RUN}"
+echo "TIMESTAMP {TIMESTAMP}"
+echo "CITY {CITY}"
+echo "z limit [${{z_lower}}, ${{z_upper}}]"
+echo "e limit [${{e_lower}}, ${{e_upper}}]"
+echo "r limit ${{r_lim}}"
+echo "======================="
+
+conda init bash
+source /scratch/halmazan/NEXT/IC_alter-blob-centre/init_IC.sh
+conda activate IC-3.8-2024-06-08
+
+python3 /scratch/halmazan/NEXT/PROCESSING/topology_cuts/bin/topology_checker.py {RUN} {TIMESTAMP} ${{z_lower}} ${{z_upper}} ${{r_lim}} ${{e_lower}} ${{e_upper}} {CITY}
+
+"""
+
+    return slurm_content
 
 
 def thekla_slurm_template(RUN,
@@ -41,15 +109,15 @@ def thekla_slurm_template(RUN,
                           script_path, 
                           output_path, 
                           error_path,
-                          partition="general", 
-                          time="01:00:00", 
-                          nodes=1, 
-                          ntasks=1, 
-                          cpus_per_task=36, 
-                          mem="32G",
-                          blobR=35,
-                          scanR=45,
-                          voxelS=60):
+                          partition, 
+                          time, 
+                          nodes, 
+                          ntasks, 
+                          cpus_per_task, 
+                          mem,
+                          blobR,
+                          scanR,
+                          voxelS):
     
     CONFIG_DIR=f"/scratch/halmazan/NEXT/N100_LPR/{RUN}/configs/{CITY}-{TIMESTAMP}"
 
@@ -57,8 +125,6 @@ def thekla_slurm_template(RUN,
     slurm_content = f"""#!/bin/bash
 #SBATCH --qos=regular
 #SBATCH --job-name={job_name}
-#SBATCH --output={output_path}
-#SBATCH --error={error_path}
 #SBATCH --partition={partition}
 #SBATCH --time={time}
 #SBATCH --nodes={nodes}
@@ -66,8 +132,8 @@ def thekla_slurm_template(RUN,
 #SBATCH --cpus-per-task={cpus_per_task}
 #SBATCH --mem={mem}
 
-#SBATCH --error=errors/%x-%j.err
-#SBATCH --output=logs/%x-%j.out
+#SBATCH --error=errors/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.err
+#SBATCH --output=logs/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.out
 #SBATCH --mail-user=john.waiton@postgrad.manchester.ac.uk
 #SBATCH --mail-type=ALL
 
@@ -80,7 +146,7 @@ SOPH_TIMESTAMP={TIMESTAMP}
 LDC={LDC}
 
 VOXEL_SIZE="[{voxelS} * mm, {voxelS} * mm, {voxelS} * mm]"
-BLOR_RAD="{blobR} * mm"
+BLOB_RAD="{blobR} * mm"
 SCAN_RAD="{scanR} * mm"
 
 INPUT_DIR="/scratch/halmazan/NEXT/N100_LPR/{RUN}/sophronia/{INPT_TIMESTAMP}/ldc{LDC}"
@@ -147,15 +213,15 @@ def create_slurm_file(JOB_TYPE,
                       script_path, 
                       output_path, 
                       error_path,
-                      partition="general", 
-                      time="01:00:00", 
-                      nodes=1, 
-                      ntasks=1, 
-                      cpus_per_task=36, 
-                      mem="32G",
-                      blobR=35,
-                      scanR=45,
-                      voxelS=60):
+                      partition, 
+                      time, 
+                      nodes, 
+                      ntasks, 
+                      cpus_per_task, 
+                      mem,
+                      blobR,
+                      scanR,
+                      voxelS):
     
     if JOB_TYPE == 'thekla':
         slurm_content = thekla_slurm_template(RUN,
@@ -176,12 +242,50 @@ def create_slurm_file(JOB_TYPE,
                           blobR,
                           scanR,
                           voxelS)
-        
-    slurm_file = f"{job_name}.slurm"
+    elif JOB_TYPE == 'topology':
+        slurm_content = topology_slurm_template(RUN,
+                          TIMESTAMP,
+                          INPT_TIMESTAMP,
+                          LDC,
+                          CITY,
+                          job_name, 
+                          script_path, 
+                          output_path, 
+                          error_path,
+                          partition, 
+                          time, 
+                          nodes, 
+                          ntasks, 
+                          cpus_per_task, 
+                          mem,
+                          blobR,
+                          scanR,
+                          voxelS)
+
+
+
+    slurm_file = f"slurm_files/{job_name}.slurm"
     with open(slurm_file, "w") as file:
         file.write(slurm_content)
     return slurm_file
 
+def resolve_data(RUNS, TIMESTAMPS):
+    '''
+    will remove all the relevant data from:
+    - sophronia
+    and move thekla data to $DATA
+    '''
+    # data from correct and cut:
+    for rn, ts in zip(RUNS, TIMESTAMPS):
+        folder_out = f'/scratch/halmazan/NEXT/N100_LPR/{rn}/thekla/{ts}/'
+        placeholder_folder = f'/data/halmazan/NEXT/N100_LPR/{rn}/thekla/{ts}'
+        for root, dirs, files in os.walk(folder_out):
+            for file in files:
+                src_path = os.path.join(root, file)
+                relative_path = os.path.relpath(src_path, folder_out)
+                dest_path = os.path.join(placeholder_folder, relative_path)
+                os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+                shutil.move(src_path, dest_path)
 
 def submit_slurm_job(slurm_file):
     try:
@@ -276,16 +380,24 @@ def create_and_submit(LDC,
     submit_slurm_job(slurm_file)
 
 
-def main():
+def run_full_param_scan(TIMESTAMP, blobR, scanR, voxelS):
     
     '''
     For the time being this function should:
         run thekla for a given blob radius, set of parameters etc
     '''
+
+    ##################################################################################
+    ###########################  THEKLA    SETUP   ###################################
+    ##################################################################################
+
+
+
     JOB_TYPE        = 'thekla'
-    RUNS            = [15589, 15590, 15591, 15592, 15593, 15594, 15596, 15597]
-    TIMESTAMP       = 240725
-    CORR_TS         = 230725
+    RUNS            = [11111, 22222]
+    #RUNS            = [15589, 15590, 15591, 15592, 15593, 15594, 15596, 15597]
+    #TIMESTAMP       = 250725
+    CORR_TS         = 12345
     CITY            = 'thekla'
     
     script_path     = ''
@@ -297,17 +409,26 @@ def main():
     ntasks          =1
     cpus_per_task   =36
     mem             ="32G"
-    blobR           =35
-    scanR           =45
-    voxelS          =60    
+    #blobR           =35
+    #scanR           =45
+    #voxelS          =15    
     
     
-    
-    print('Trying to run thekla')
+    print(f'==========================')
+    print(f'==========================')
+    print(f'     THEKLA RUNTIME')
+    print(f'==========================')
+    print(f'==========================')
 
 
-
+    # running thekla
     for i, RN in enumerate(RUNS):
+
+        # give it a moment to catch up
+        t.sleep(30)
+        while get_running_jobs() > 3:
+            print('Prior jobs not finished, waiting 5 minutes...')
+            t.sleep(300)
 
         job_name        = f'{CITY}-{RN}-{TIMESTAMP}-bR{blobR}-sR{scanR}-vS{voxelS}'
 
@@ -333,19 +454,101 @@ def main():
             voxelS=voxelS
         )
 
-
+        print(f'==========================')
         print(f'Submitting pool for {RN}')
+        print(f'==========================')
         with Pool() as pool:
             pool.map(process_ldc, range(1, 8))
         
+        
+    # Take a break in between processes, there should be NO jobs running here
+    t.sleep(30)
+    while get_running_jobs() != 0:
+        print('Prior jobs not finished, waiting 5 minutes...')
+        t.sleep(300)
+
+    # ensure all other jobs finish
+
+    ##################################################################################
+    ###########################  TOPOLOGY SETUP   ###################################
+    ##################################################################################
+
+    print(f'==========================')
+    print(f'==========================')
+    print(f'     TOPOLOGY RUNTIME')
+    print(f'==========================')
+    print(f'==========================')
+
+
+    JOB_TYPE        = 'topology'
+    
+    script_path     = ''
+    error_path      = f'errors/%x-%j-%A-%a-{TIMESTAMP}.err'
+    output_path     = f'logs/%x-%j-%A-%a-{TIMESTAMP}.log'
+    partition       ="general" 
+    time            ="24:00:00"
+    nodes           =1
+    ntasks          =1
+    cpus_per_task   =6
+    mem             ="20G" 
+    LDC = 1 # since we dont care
+
+
+    # running topology cut
+    for i, RN in enumerate(RUNS):
+        job_name        = f'CORRECTIONS-{RN}-{TIMESTAMP}-bR{blobR}-sR{scanR}-vS{voxelS}'
+
+        # compiles all the LDCs, so just set LDC to one for this one
+        create_and_submit(LDC = LDC,
+            RUN = RN,
+            job_name=job_name,
+            JOB_TYPE=JOB_TYPE,
+            TIMESTAMP=TIMESTAMP,
+            INPT_TIMESTAMP=CORR_TS,
+            CITY="thekla",
+            script_path=script_path,
+            output_path=output_path,
+            error_path=error_path,
+            partition=partition,
+            time=time,
+            nodes=nodes,
+            ntasks=ntasks,
+            cpus_per_task=cpus_per_task,
+            mem=mem,
+            blobR=blobR,
+            scanR=scanR,
+            voxelS=voxelS)
+
         # give it a moment to catch up
         t.sleep(30)
         while get_running_jobs() > 3:
-            print('Prior jobs not finished, not rushing')
-            t.sleep(60)
+            print('Prior jobs not finished, waiting 5 minutes...')
+            t.sleep(300)
 
-        # early checker
-        if i > 2:
-            break
+    # Take a break in between processes, there should be NO jobs running here
+    t.sleep(30)
+    while get_running_jobs() != 0:
+        print('Prior jobs not finished, waiting 5 minutes...')
+        t.sleep(300)
+    
+    # move the thekla files to data
+    resolve_data(RUNS, [TIMESTAMP] * len(RUNS))
+        
+
+def main():
+
+
+    # assign the timestamps, and corresponding blob radii here, then run them
+    # order of timestamp is 'blobRscanRvoxS'
+    #TSs = [253015, 254015, 255015, 256015, 354015, 355015, 356015, 455015, 456015, 556015]
+    TSs = [355015, 456018]
+
+    for TS in TSs:
+        # split into three
+        blobR, scanR, voxS = int(str(TS)[:2]), int(str(TS)[2:4]), int(str(TS)[4:])
+        print(f'\n\n\n\n\n\n\n\n\n')
+        print(f'Running full parameter scan of\nblobR-{blobR}\nscanR-{scanR}\nvoxS-{voxS}')
+        run_full_param_scan(TS, blobR, scanR, voxS)
+
 
 main()
