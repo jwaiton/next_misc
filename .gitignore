@@ -37,3 +37,7 @@ miscellaneous/reworded_IC/
 *.csv
 localdb.NEXT100DB.sqlite3
 *.pdf
+blob_fix/krishan_bad_tracks.tar.xz
+*.psf
+toolbox/data/matplotlibrc
+*.hdf
