@@ -1,0 +1,28 @@
+executable      = bin/fedora.sh 
+request_memory  = 4G
+request_cpus    = 1
+request_disk    = 5G
+initialdir	= $ENV(HOME)/scripts
+
+RUN=15616
+LDC=1
+TIMESTAMP=040925
+REBIN=100000
+TRIGGER=1
+
+INFILE=/gluster/data/next/files/TOPOLOGY_John/N100_data/$(RUN)/sophronia/trigger$(TRIGGER)/ldc$(LDC)/
+OUTFILE=/gluster/data/next/files/TOPOLOGY_John/N100_data/$(RUN)/sophronia/$(TIMESTAMP)/ldc$(LDC)/
+
+
+output          = out/fedora/out/fedora_R$(RUN)_LDC$(LDC).$(ClusterId)-$(Process)-$(TIMESTAMP).out
+error           = out/fedora/err/fedora_R$(RUN)_LDC$(LDC).$(ClusterId)-$(Process)-$(TIMESTAMP).err
+log             = out/fedora/log/fedora_R$(RUN)_LDC$(LDC).$(ClusterId)-$(Process)-$(TIMESTAMP).log
+arguments = $(INFILE) $(OUTFILE) $(REBIN) $(Process) $(RUN) $(TIMESTAMP) $(LDC)
+
+max_idle = 100
+
+should_transfer_files = yes
+when_to_transfer_output = ON_EXIT
+
+queue 1700 
+
