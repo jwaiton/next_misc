@@ -27,7 +27,7 @@ echo "================"
 
 if [ ! -f ${REBINFILE} ]; then
 	echo "File not found, processing as normal..."
-	python3 /gluster/home/jwaiton/scripts/bin/fedora.py $SOPHFILE $REBINFILE $RB_FACT
+	python3 /gluster/home/jwaiton/scripts/bin/fedora.py $SOPHFILE $REBINFILE $RB_FACT $RUNNUMBER
 fi
 
 echo "DONE!!!"

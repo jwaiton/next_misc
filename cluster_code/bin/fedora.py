@@ -10,18 +10,30 @@ import sys,os,os.path
 
 from invisible_cities.io.dst_io           import load_dst
 from invisible_cities.io.dst_io           import df_writer
+from invisible_cities.cities.components   import copy_mc_info
 
-
-def rebin(input_path, output_path, rebin_value):
+def rebin(input_path, output_path, rebin_value, run_number):
     DST   = load_dst(input_path, 'DST', 'Events')
     RECO  = load_dst(input_path, 'RECO', 'Events')
     evt  = load_dst(input_path, 'Run', 'events')
     rinfo = load_dst(input_path, 'Run', 'runInfo')
     fils  = load_dst(input_path, 'Filters', 's12_selector')
     vldh  = load_dst(input_path, 'Filters', 'valid_hit')
-    DBPM  = load_dst(input_path, 'DB', 'DataPMT')
-    DBSi  = load_dst(input_path, 'DB', 'DataSiPM')
+    
+    # if not MC, add these in
+    if int(run_number) > 0:
+        DBPM  = load_dst(input_path, 'DB', 'DataPMT')
+        DBSi  = load_dst(input_path, 'DB', 'DataSiPM')
 
+
+    if int(run_number) <= 0:
+        MC_conf      = load_dst(input_path, 'MC', 'configuration')
+        MC_evmp      = load_dst(input_path, 'MC', 'event_mapping')
+        MC_hits      = load_dst(input_path, 'MC', 'hits')
+        MC_particles = load_dst(input_path, 'MC', 'particles')
+        MC_snspos    = load_dst(input_path, 'MC', 'sns_positions')
+        MC_sns_resp  = load_dst(input_path, 'MC', 'sns_response')
+        MC_evtmp     = load_dst(input_path, 'Run', 'eventMap')
    
     rebin_value = int(rebin_value) 
     rebinned_RECO = []
@@ -42,8 +54,19 @@ def rebin(input_path, output_path, rebin_value):
         df_writer(h5out, rinfo, 'Run', 'runInfo')
         df_writer(h5out, fils, 'Filters', 's12_selector')
         df_writer(h5out, vldh, 'Filters', 'valid_hit')
-        df_writer(h5out, DBPM, 'DB', 'DataPMT')
-        df_writer(h5out, DBSi, 'DB', 'DataSiPM')
+        if int(run_number) > 0:
+            df_writer(h5out, DBPM, 'DB', 'DataPMT')
+            df_writer(h5out, DBSi, 'DB', 'DataSiPM')
+
+        if int(run_number) <= 0:
+            df_writer(h5out, MC_conf, 'MC', 'configuration')
+            df_writer(h5out, MC_evmp, 'MC', 'event_mapping')
+            df_writer(h5out, MC_hits, 'MC', 'hits')
+            df_writer(h5out, MC_particles, 'MC', 'particles')
+            df_writer(h5out, MC_snspos, 'MC', 'sns_positions')
+            df_writer(h5out, MC_sns_resp, 'MC', 'sns_response')
+            df_writer(h5out, MC_evtmp,  'Run', 'eventMap')
+         
 
 input_path = sys.argv[1]
 print(f'Input: {input_path}')
@@ -51,6 +74,9 @@ output_path = sys.argv[2]
 print(f'Output: {output_path}')
 rebin_value = sys.argv[3]
 print(f'Rebinning with factor {rebin_value}')
+run_number = int(sys.argv[4])
+print(f'Run number: {run_number}')
 print('This should correspond to double/triple/n-le the spacing between Z positions.')
 
-rebin(input_path, output_path, rebin_value)
+rebin(input_path, output_path, rebin_value, run_number)
+
