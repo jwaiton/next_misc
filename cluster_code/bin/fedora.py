@@ -41,7 +41,7 @@ def rebin(input_path, output_path, rebin_value, run_number):
     for evts, df in RECO.groupby('event'):
         zbin = (df.Z // rebin_value) * rebin_value
         df['Z'] = zbin
-        q = df.groupby('event time npeak nsipm X Y Xrms Yrms Z track_id Ep'.split()).agg(dict(E="sum", Q="sum", Ec="sum", Qc="sum")).reset_index()
+        q = df.groupby('event time npeak Xpeak Ypeak nsipm X Y Xrms Yrms Z track_id Ep'.split()).agg(dict(E="sum", Q="sum", Ec="sum", Qc="sum")).reset_index()
         rebinned_RECO.append(q)
     
     rebinned_RECO = pd.concat(rebinned_RECO)
