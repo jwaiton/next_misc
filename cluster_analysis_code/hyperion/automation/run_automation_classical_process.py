@@ -90,7 +90,7 @@ echo "r limit ${{r_lim}}"
 echo "======================="
 
 conda init bash
-source /scratch/halmazan/NEXT/IC_alter-blob-centre/init_IC.sh
+source /scratch/halmazan/NEXT/IC_improve_classical_process/init_IC.sh
 conda activate IC-3.8-2024-06-08
 
 python3 /scratch/halmazan/NEXT/PROCESSING/topology_cuts/bin/topology_checker.py {RUN} {TIMESTAMP} ${{z_lower}} ${{z_upper}} ${{r_lim}} ${{e_lower}} ${{e_upper}} {CITY}
@@ -147,7 +147,6 @@ LDC={LDC}
 
 VOXEL_SIZE="[{voxelS} * mm, {voxelS} * mm, {voxelS} * mm]"
 BLOB_RAD="{blobR} * mm"
-SCAN_RAD="{scanR} * mm"
 
 INPUT_DIR="/scratch/halmazan/NEXT/N100_LPR/{RUN}/sophronia/{INPT_TIMESTAMP}/ldc{LDC}"
 OUTPUT_DIR="/scratch/halmazan/NEXT/N100_LPR/{RUN}/thekla/{TIMESTAMP}/ldc{LDC}"
@@ -182,7 +181,6 @@ for file in "$INPUT_DIR"/*; do
 		energy_threshold = 10 * keV,
 		min_voxels = 3,
 		blob_radius = ${{BLOB_RAD}},
-		scan_radius = ${{SCAN_RAD}},
 		max_num_hits = 1000000)"                    >> ${{config_path}}
 	
 	echo "corrections = None"      >> ${{config_path}}
@@ -193,7 +191,7 @@ done
 echo "Config produced, initialising IC"
 # Initialise IC
 conda init bash
-source /scratch/halmazan/NEXT/IC_alter-blob-centre/init_IC.sh
+source /scratch/halmazan/NEXT/IC_improve_classical_process/init_IC.sh
 conda activate IC-3.8-2024-06-08
 
 # parallel execution
@@ -545,7 +543,7 @@ def main():
     #TSs = [253015, 254015, 255015, 256015, 354015, 355015, 356015, 455015, 456015, 556015]
     #TSs = [355018, 355021, 456018, 456021, 557015, 557018, 557021, 658015, 658018, 658021]
     #TSs = [355024, 456024, 557024, 658024]
-    TSs = [355018]
+    TSs = [459918]
     # the test
     #TSs = [375015, 476015]
 

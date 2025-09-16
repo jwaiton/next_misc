@@ -60,8 +60,8 @@ def topology_slurm_template(RUN,
 #SBATCH --cpus-per-task={cpus_per_task}
 #SBATCH --mem={mem}
 
-#SBATCH --error=errors_topology/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.err
-#SBATCH --output=logs_topology/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.out
+#SBATCH --error=errors_MC_topology/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.err
+#SBATCH --output=logs_MC_topology/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.out
 #SBATCH --mail-user=john.waiton@postgrad.manchester.ac.uk
 #SBATCH --mail-type=ALL
 
@@ -93,7 +93,7 @@ conda init bash
 source /scratch/halmazan/NEXT/IC_alter-blob-centre/init_IC.sh
 conda activate IC-3.8-2024-06-08
 
-python3 /scratch/halmazan/NEXT/PROCESSING/topology_cuts/bin/topology_checker.py {RUN} {TIMESTAMP} ${{z_lower}} ${{z_upper}} ${{r_lim}} ${{e_lower}} ${{e_upper}} {CITY}
+python3 /scratch/halmazan/NEXT/PROCESSING/topology_cuts/bin/topology_checker_MC.py {RUN} {TIMESTAMP} ${{z_lower}} ${{z_upper}} ${{r_lim}} ${{e_lower}} ${{e_upper}} {CITY}
 
 """
 
@@ -119,7 +119,7 @@ def thekla_slurm_template(RUN,
                           scanR,
                           voxelS):
     
-    CONFIG_DIR=f"/scratch/halmazan/NEXT/N100_LPR/{RUN}/configs/{CITY}-{TIMESTAMP}"
+    CONFIG_DIR=f"/scratch/halmazan/NEXT/N100_LPR_MC/{RUN}/configs/{CITY}-{TIMESTAMP}"
 
 
     slurm_content = f"""#!/bin/bash
@@ -132,8 +132,8 @@ def thekla_slurm_template(RUN,
 #SBATCH --cpus-per-task={cpus_per_task}
 #SBATCH --mem={mem}
 
-#SBATCH --error=errors/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.err
-#SBATCH --output=logs/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.out
+#SBATCH --error=errors_MC/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.err
+#SBATCH --output=logs_MC/%x-%j-bR{blobR}sR{scanR}vS{voxelS}-LDC{LDC}.out
 #SBATCH --mail-user=john.waiton@postgrad.manchester.ac.uk
 #SBATCH --mail-type=ALL
 
@@ -149,14 +149,14 @@ VOXEL_SIZE="[{voxelS} * mm, {voxelS} * mm, {voxelS} * mm]"
 BLOB_RAD="{blobR} * mm"
 SCAN_RAD="{scanR} * mm"
 
-INPUT_DIR="/scratch/halmazan/NEXT/N100_LPR/{RUN}/sophronia/{INPT_TIMESTAMP}/ldc{LDC}"
-OUTPUT_DIR="/scratch/halmazan/NEXT/N100_LPR/{RUN}/thekla/{TIMESTAMP}/ldc{LDC}"
-CONFIG_DIR="/scratch/halmazan/NEXT/N100_LPR/{RUN}/configs/{CITY}-{TIMESTAMP}"
+INPUT_DIR="/scratch/halmazan/NEXT/PROCESSING/fedora/data/{RUN}/ldc{LDC}"
+OUTPUT_DIR="/scratch/halmazan/NEXT/N100_LPR_MC/{RUN}/thekla/{TIMESTAMP}/ldc{LDC}"
+CONFIG_DIR="/scratch/halmazan/NEXT/N100_LPR_MC/{RUN}/configs/{CITY}-{TIMESTAMP}"
 
 mkdir -p "$CONFIG_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-CONFIG_LIST="/scratch/halmazan/NEXT/PROCESSING/thekla_configs/config_list_{CITY}_{RUN}_{TIMESTAMP}-LDC{LDC}.txt"
+CONFIG_LIST="/scratch/halmazan/NEXT/PROCESSING/thekla_configs/config_list_MC_{CITY}_{RUN}_{TIMESTAMP}-LDC{LDC}.txt"
 > "$CONFIG_LIST" # clear previous config lists
 
 
@@ -170,7 +170,7 @@ for file in "$INPUT_DIR"/*; do
 	echo "file_out = '${{OUTPUT_DIR}}/${{raw_name}}_{CITY}.h5'" >> ${{config_path}}
 	echo "compression = 'ZLIB4'"                             >> ${{config_path}}
 	echo "event_range=1000"                                  >> ${{config_path}}
-	echo "run_number = {RUN}"                               >> ${{config_path}}
+	echo "run_number = 0"                                    >> ${{config_path}}
 	echo "detector_db = 'next100'"                           >> ${{config_path}}
 	echo "print_mod = 1"                                     >> ${{config_path}}
 	echo "threshold = 5"                                    >> ${{config_path}}
@@ -277,8 +277,8 @@ def resolve_data(RUNS, TIMESTAMPS):
     '''
     # data from correct and cut:
     for rn, ts in zip(RUNS, TIMESTAMPS):
-        folder_out = f'/scratch/halmazan/NEXT/N100_LPR/{rn}/thekla/{ts}/'
-        placeholder_folder = f'/data/halmazan/NEXT/N100_LPR/{rn}/thekla/{ts}'
+        folder_out = f'/scratch/halmazan/NEXT/N100_LPR_MC/{rn}/thekla/{ts}/'
+        placeholder_folder = f'/data/halmazan/NEXT/N100_LPR_MC/{rn}/thekla/{ts}'
         for root, dirs, files in os.walk(folder_out):
             for file in files:
                 src_path = os.path.join(root, file)
@@ -396,9 +396,10 @@ def run_full_param_scan(TIMESTAMP, blobR, scanR, voxelS):
     JOB_TYPE        = 'thekla'
     #RUNS            = [11111, 22222]
     #RUNS            = [15589, 15590, 15591, 15592, 15593, 15594, 15596, 15597]
-    RUNS            = [15589, 15590, 15591, 15592]
+    #RUNS            = [15589, 15590, 15591, 15592]
+    RUNS             = ['040925']
     #TIMESTAMP       = 250725
-    CORR_TS         = 230725
+    CORR_TS         = 230725 # ignorable here
     #CORR_TS         = 12345
     CITY            = 'thekla'
     
@@ -545,7 +546,7 @@ def main():
     #TSs = [253015, 254015, 255015, 256015, 354015, 355015, 356015, 455015, 456015, 556015]
     #TSs = [355018, 355021, 456018, 456021, 557015, 557018, 557021, 658015, 658018, 658021]
     #TSs = [355024, 456024, 557024, 658024]
-    TSs = [355018]
+    TSs = [456018]
     # the test
     #TSs = [375015, 476015]
 
