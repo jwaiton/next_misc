@@ -41,3 +41,6 @@ blob_fix/krishan_bad_tracks.tar.xz
 *.psf
 toolbox/data/matplotlibrc
 *.hdf
+*.err
+*.log
+*.out
