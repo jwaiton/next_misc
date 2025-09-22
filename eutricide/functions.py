@@ -29,7 +29,8 @@ def rr_process(df_in):
 def plot_psf(df, label, norm = False):
 
     if norm:
-        plt.plot((np.flip(-df.rr)).append(df.rr), (np.flip(normalise(df.factor))).append(normalise(df.factor)), label = label)
+        plt.plot(np.concatenate([np.flip(-df.rr.values), df.rr.values]), np.concatenate([np.flip(normalise(df.factor.values)), normalise(df.factor.values)]), label = label)
+        #plt.plot(np.concatenate([np.flip(-df.rr.values),df.rr.values]), (np.concatentate(np.flip(normalise(df.factor.values))), (normalise(df.factor.values))), label = label)
     else:
         plt.plot((np.flip(-df.rr)).append(df.rr), (np.flip(df.factor)).append(df.factor), label = label)
 
