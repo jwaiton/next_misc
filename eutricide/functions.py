@@ -26,13 +26,19 @@ def rr_process(df_in):
            )
 
 
-def plot_psf(df, label, norm = False):
+def plot_psf(df, label, norm = False, color = None):
+
 
     if norm:
-        plt.plot(np.concatenate([np.flip(-df.rr.values), df.rr.values]), np.concatenate([np.flip(normalise(df.factor.values)), normalise(df.factor.values)]), label = label)
+        plt.plot(np.concatenate([np.flip(-df.rr.values), df.rr.values]), 
+             np.concatenate([np.flip(normalise(df.factor.values)), normalise(df.factor.values)]), 
+             label=label, 
+             color=color if color is not None else None)
         #plt.plot(np.concatenate([np.flip(-df.rr.values),df.rr.values]), (np.concatentate(np.flip(normalise(df.factor.values))), (normalise(df.factor.values))), label = label)
     else:
-        plt.plot((np.flip(-df.rr)).append(df.rr), (np.flip(df.factor)).append(df.factor), label = label)
+        plt.plot((np.flip(-df.rr)).append(df.rr), (np.flip(df.factor)).append(df.factor),
+                  label = label,
+                  color=color if color is not None else None)
 
 
 def z_specific_rr(df, z_val):
@@ -43,8 +49,8 @@ def z_specific_rr(df, z_val):
     return rr_process(dfz)
 
 
-def create_plots_psf(df, z, label = 'None', norm = False):
+def create_plots_psf(df, z, label = 'None', norm = False, color = None):
     q = z_specific_rr(df, z)
-    plot_psf(q, label, norm)
+    plot_psf(q, label, norm, color)
 
     return q
