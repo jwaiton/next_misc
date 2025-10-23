@@ -44,3 +44,4 @@ toolbox/data/matplotlibrc
 *.err
 *.log
 *.out
+dumpster/
