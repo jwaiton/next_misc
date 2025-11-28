@@ -91,7 +91,7 @@ def read_data(input, run_number, h5_pattern):
             dsts[key] = load_dst(input, group, node)
         except Exception as e:
             # out of laziness to avoid later crashing, insert empty df
-            dsts[key] = pd.DataFrame()
+            dsts[key] = pd.DataFrame([[np.nan] * 5], columns=[f"col{i}" for i in range(5)])
             print(f'File {input} broke:\n{e}')
 
     # read out all this madness from a dictionary
@@ -133,7 +133,7 @@ def beershireba(input_directory, output_directory, run_number, timestamp, rebin_
 
     # save time in the loading: dictionary name,  h5 group,  h5 node
     h5_pattern = {'DST'      :  ['DST',     'Events'],
-                  'rebin_df' :  ['DECO',    'Events'],
+                  'DECO'     :  ['DECO',    'Events'],
                   'filters'  :  ['Filters', 'nohits'],
                   'runevts'  :  ['Run',     'events'],
                   'runinfo'  :  ['Run',     'runInfo'],
@@ -168,26 +168,29 @@ def beershireba(input_directory, output_directory, run_number, timestamp, rebin_
         dsts = read_data(f'{input_directory}{f}', run_number, h5_pattern)
 
         file_data = []
-        for i, df in tqdm(dsts['DECO'].groupby('event')):
-            print('=' * 20)
-            print(f'event {i}:')
-            print('=' * 20)
 
-            # rebin
-            print(f'rebinning with {rebin_d[0]}, {rebin_d[1]}, {rebin_d[2]}')
-            rebinned_df = rebin(df, rebin_d[0], rebin_d[1], rebin_d[2])
-            print(f'rebinned from {df.shape} to {rebinned_df.shape}')
-            # drop isolated sensors
-            print('dropping...')
-            dropped_df  = drop_sensors(rebinned_df.copy())
-            # append to the lsit
-            file_data.append(dropped_df)
+        try:
+            for i, df in tqdm(dsts['DECO'].groupby('event')):
+                print('=' * 20)
+                print(f'event {i}:')
+                print('=' * 20)
 
-        new_df = pd.concat(file_data)
-        # save
-        print('saving...' )
-        save_data(dsts, new_df, output_directory, output_name, run_number)
+                # rebin
+                print(f'rebinning with {rebin_d[0]}, {rebin_d[1]}, {rebin_d[2]}')
+                rebinned_df = rebin(df, rebin_d[0], rebin_d[1], rebin_d[2])
+                print(f'rebinned from {df.shape} to {rebinned_df.shape}')
+                # drop isolated sensors
+                print('dropping...')
+                dropped_df  = drop_sensors(rebinned_df.copy())
+                # append to the lsit
+                file_data.append(dropped_df)
 
+            new_df = pd.concat(file_data)
+            # save
+            print('saving...' )
+            save_data(dsts, new_df, output_directory, output_name, run_number)
+        except Exception as e:
+            print(f'beershebashire broke for file {f}:\n{e}')
 
 
 def arg_parser():
