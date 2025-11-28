@@ -86,7 +86,7 @@ def read_data(input, run_number, h5_pattern):
     '''
     dsts = {}
 
-    for key, group, node in h5_pattern:
+    for key, (group, node) in h5_pattern.items():
         try:
             dsts[key] = load_dst(input, group, node)
         except Exception as e:
