@@ -90,6 +90,8 @@ def read_data(input, run_number, h5_pattern):
         try:
             dsts[key] = load_dst(input, value[0], value[1])
         except Exception as e:
+            # out of laziness to avoid later crashing, insert empty df
+            dsts[key] = pd.DataFrame()
             print(f'File {input} broke:\n{e}')
 
     # read out all this madness from a dictionary
