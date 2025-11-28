@@ -86,9 +86,9 @@ def read_data(input, run_number, h5_pattern):
     '''
     dsts = {}
 
-    for key, value in h5_pattern:
+    for key, group, node in h5_pattern:
         try:
-            dsts[key] = load_dst(input, value[0], value[1])
+            dsts[key] = load_dst(input, group, node)
         except Exception as e:
             # out of laziness to avoid later crashing, insert empty df
             dsts[key] = pd.DataFrame()
