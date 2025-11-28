@@ -80,30 +80,19 @@ def rebin(df, dx, dy, dz, q_type = 'Qc', e_type = 'E'):
     return rebin_df
 
 
-def read_data(input, run_number):
+def read_data(input, run_number, h5_pattern):
     '''
     takes in and reads out all the required beersheba tables
     '''
     dsts = {}
 
-    dsts['DECO']    = load_dst(input, 'DECO',    'Events')
-    dsts['DST']     = load_dst(input, 'DST',     'Events')
-    dsts['filters'] = load_dst(input, 'Filters', 'nohits')
-    dsts['runevts'] = load_dst(input, 'Run',     'events')
-    dsts['runinfo'] = load_dst(input, 'Run',     'runInfo')
-    dsts['conf']    = load_dst(input, 'config',  'beersheba')
+    for key, value in h5_pattern:
+        try:
+            dsts[key] = load_dst(input, value[0], value[1])
+        except Exception as e:
+            print(f'File {input} broke:\n{e}')
 
-    # load in MC if labelled as an MC run
-    if int(run_number) <= 0:
-        dsts['MC_conf']      = load_dst(input, 'MC', 'configuration')
-        dsts['MC_evmp']      = load_dst(input, 'MC', 'event_mapping')
-        dsts['MC_hits']      = load_dst(input, 'MC', 'hits')
-        dsts['MC_particles'] = load_dst(input, 'MC', 'particles')
-        dsts['MC_snspos']    = load_dst(input, 'MC', 'sns_positions')
-        dsts['MC_sns_resp']  = load_dst(input, 'MC', 'sns_response')
-        dsts['MC_evtmp']     = load_dst(input, 'Run', 'eventMap')
-
-   # read out all this madness from a dictionary
+    # read out all this madness from a dictionary
     return dsts
 
 
@@ -113,7 +102,6 @@ def save_data(dsts, rebin_df, output_directory, save_file_name, run_number):
     '''
 
     print(f'Saving data to {output_directory}{save_file_name}')
-
     with tb.open_file(f'{output_directory}{save_file_name}', 'w') as h5out:
         df_writer(h5out, dsts['DST'],      'DST',     'Events')
         df_writer(h5out, rebin_df,         'DECO',    'Events')
@@ -141,6 +129,28 @@ def beershireba(input_directory, output_directory, run_number, timestamp, rebin_
         print(f'{output_directory} does not exist, creating it now...')
         os.makedirs(output_directory, exist_ok=True) # no need for the exist_ok check, but left in
 
+    # save time in the loading: dictionary name,  h5 group,  h5 node
+    h5_pattern = {'DST'      :  ['DST',     'Events'],
+                  'rebin_df' :  ['DECO',    'Events'],
+                  'filters'  :  ['Filters', 'nohits'],
+                  'runevts'  :  ['Run',     'events'],
+                  'runinfo'  :  ['Run',     'runInfo'],
+                  'conf'     :  ['config',  'beersheba']}
+
+    # adding MC
+    if int(run_number) <= 0:
+        h5_pattern['MC_conf']      = ['MC',  'configuration']
+        h5_pattern['MC_evmp']      = ['MC',  'event_mapping']
+        h5_pattern['MC_hits']      = ['MC',  'hits']
+        h5_pattern['MC_particles'] = ['MC',  'particles']
+        h5_pattern['MC_snspos']    = ['MC',  'sns_positions']
+        h5_pattern['MC_sns_resp']  = ['MC',  'sns_response']
+        h5_pattern['MC_evtmp']     = ['MC',  'eventMap']
+
+
+
+
+
     drop_sensors = drop_isolated(drop_dist, ['E'], nhits)
     # extract all files in the input directory
     files = [f for f in os.listdir(input_directory) if f.endswith('.h5')]
@@ -153,7 +163,7 @@ def beershireba(input_directory, output_directory, run_number, timestamp, rebin_
         output_name = f'run_{run_number}_{evt_num}_{LDC_num}_{timestamp}_beershireba.h5'
 
 
-        dsts = read_data(f'{input_directory}{f}', run_number)
+        dsts = read_data(f'{input_directory}{f}', run_number, h5_pattern)
 
         file_data = []
         for i, df in tqdm(dsts['DECO'].groupby('event')):
@@ -173,7 +183,7 @@ def beershireba(input_directory, output_directory, run_number, timestamp, rebin_
 
         new_df = pd.concat(file_data)
         # save
-        print('saving...')
+        print('saving...' )
         save_data(dsts, new_df, output_directory, output_name, run_number)
 
 
