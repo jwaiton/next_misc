@@ -1,0 +1,75 @@
+#!/bin/bash
+#SBATCH --partition=general
+#SBATCH --qos=regular
+#SBATCH --job-name=fedora
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#
+#SBATCH --error=errors_fedora/%x-%j.err
+#SBATCH --output=logs_fedora/%x-%j.out
+#SBATCH --mail-user=john.waiton@postgrad.manchester.ac.uk
+#SBATCH --mail-type=ALL
+
+echo "Initialise conda"
+
+# >>> conda initialize >>>
+# # !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/halmazan/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/halmazan/miniconda/etc/profile.d/conda.sh" ]; then
+        . "/home/halmazan/miniconda/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/halmazan/miniconda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+leading_zero_fill() {
+	printf "%0$1d\\n" "$2"
+}
+# Source IC
+conda init bash
+source /scratch/halmazan/NEXT/IC_alter-blob-centre/init_IC.sh
+conda activate IC-3.8-2024-06-08
+echo "IC sourced"
+
+NUMBER=$4
+LEADING_NUMBER=$(leading_zero_fill 4 "$NUMBER")
+RB_FACT=4 # rebin factor
+RUNNUMBER=0
+TIMESTAMP=040925
+LDC=5
+
+
+INPUTDIR="/data/halmazan/NEXT/N100_LPR_MC/${TIMESTAMP}/prod/sophronia/ldc${LDC}"
+OUTPUTDIR="/scratch/halmazan/NEXT/PROCESSING/fedora/data/${TIMESTAMP}/ldc${LDC}"
+mkdir -pv "$OUTPUTDIR"
+
+echo "Running rebinner.."
+echo "================"
+echo "INFILE: ${SOPHFILE}"
+echo "OUTFILE: ${REBINFILE}"
+echo "REBIN FACTOR: ${RB_FACT}"
+echo "RUN NUMBER: ${RUNNUMBER}"
+echo "TIMESTAMP: ${TIMESTAMP}"
+echo "LDC: ${LDC}"
+echo "================"
+
+
+for i in $INPUTDIR/*; do [ -f "$i" ] && echo "Processing $i now"; 
+python3 /scratch/halmazan/NEXT/PROCESSING/fedora/bin/fedora.py $i "${OUTPUTDIR}/$(basename $i)" $RB_FACT $RUNNUMBER;
+echo "Done!";
+done
+
+#if [ ! -f ${REBINFILE} ]; then
+#	echo "File not found, processing as normal..."
+#	python3 /scratch/halmazan/NEXT/PROCESSING/fedora/bin/fedora.py $SOPHFILE $REBINFILE $RB_FACT $RUNNUMBER
+#fi
+
+echo "FULLY DONE!!!"

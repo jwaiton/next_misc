@@ -1,0 +1,56 @@
+
+
+echo "Initialise conda"
+
+# >>> conda initialize >>>
+# # !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/halmazan/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/halmazan/miniconda/etc/profile.d/conda.sh" ]; then
+        . "/home/halmazan/miniconda/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/halmazan/miniconda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+leading_zero_fill() {
+	printf "%0$1d\\n" "$2"
+}
+# Source IC
+source /scratch/halmazan/NEXT/IC_alter-blob-centre/init_ic.sh
+echo "IC sourced"
+
+NUMBER=$4
+LEADING_NUMBER=$(leading_zero_fill 4 "$NUMBER")
+INFILE=$1
+OUTFILE=$2
+RB_FACT=$3
+RUNNUMBER=0
+TIMESTAMP=$6
+LDC=2
+
+
+SOPHFILE="$/run_${RUNNUMBER}_${LEADING_NUMBER}_ldc${LDC}*.h5"
+REBINFILE="/scratch/halmazan/NEXT/PROCESSING/fedora/data/"
+mkdir -pv "$REBINFILE"
+
+echo "Running rebinner.."
+echo "================"
+echo "INFILE: ${SOPHFILE}"
+echo "OUTFILE: ${REBINFILE}"
+echo "REBIN FACTOR: ${RB_FACT}"
+echo "RUN NUMBER: ${RUNNUMBER}"
+echo "TIMESTAMP: ${TIMESTAMP}"
+echo "LDC: ${LDC}"
+echo "================"
+
+if [ ! -f ${REBINFILE} ]; then
+	echo "File not found, processing as normal..."
+	python3 /scratch/halmazan/NEXT/PROCESSING/fedora/bin/fedora.py $SOPHFILE $REBINFILE $RB_FACT $RUNNUMBER
+fi
+
+echo "DONE!!!"

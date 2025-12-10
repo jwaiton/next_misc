@@ -1,0 +1,95 @@
+#!/bin/bash
+#SBATCH --partition=general
+#SBATCH --qos=regular
+#SBATCH --job-name=thekla
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=36
+#SBATCH --mem=32G
+
+#SBATCH --error=errors/%x-%j.err
+#SBATCH --output=logs/%x-%j.out
+#SBATCH --mail-user=john.waiton@postgrad.manchester.ac.uk
+#SBATCH --mail-type=ALL
+
+echo "Initialise conda"
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/halmazan/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/halmazan/miniconda/etc/profile.d/conda.sh" ]; then
+        . "/home/halmazan/miniconda/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/halmazan/miniconda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+
+echo "RUN CONFIG WRITER"
+
+echo "Slurm job id is ${SLURM_JOB_ID}"
+
+CITY=thekla
+RUN=15597
+TIMESTAMP=180725
+SOPH_TIMESTAMP=180725
+LDC=4
+
+VOXEL_SIZE="[15 * mm, 15 * mm, 15 * mm]"
+BLOB_RAD="45 * mm"
+SCAN_RAD="60 * mm"
+
+INPUT_DIR="/scratch/halmazan/NEXT/N100_LPR/${RUN}/sophronia/${SOPH_TIMESTAMP}/ldc${LDC}"
+OUTPUT_DIR="/scratch/halmazan/NEXT/N100_LPR/${RUN}/thekla/${TIMESTAMP}/ldc${LDC}"
+CONFIG_DIR="/scratch/halmazan/NEXT/N100_LPR/${RUN}/configs/${CITY}-${TIMESTAMP}"
+
+mkdir -p "$CONFIG_DIR"
+mkdir -p "$OUTPUT_DIR"
+
+CONFIG_LIST="/scratch/halmazan/NEXT/PROCESSING/thekla_configs/config_list_${CITY}_${RUN}_${TIMESTAMP}-LDC${LDC}.txt"
+> "$CONFIG_LIST" # clear previous config lists
+
+for file in "$INPUT_DIR"/*; do
+	filename=$(basename "$file")
+	raw_name="${filename%.*}"
+	
+	config_path="${CONFIG_DIR}/${raw_name}.conf"
+	# create config here
+	echo "files_in = '${file}'"                              > ${config_path}
+	echo "file_out = '${OUTPUT_DIR}/${raw_name}_${CITY}.h5'" >> ${config_path}
+	echo "compression = 'ZLIB4'"                             >> ${config_path}
+	echo "event_range=1000"                                  >> ${config_path}
+	echo "run_number = ${RUN}"                               >> ${config_path}
+	echo "detector_db = 'next100'"                           >> ${config_path}
+	echo "print_mod = 1"                                     >> ${config_path}
+	echo "threshold = 10"                                    >> ${config_path}
+	echo "drop_distance = [16., 16., 4.]"                    >> ${config_path}
+	echo "drop_minimum = 5"                                  >> ${config_path}
+	echo "paolina_params  = dict(
+		vox_size = ${VOXEL_SIZE},
+		strict_vox_size = False,
+		energy_threshold = 10 * keV,
+		min_voxels = 3,
+		blob_radius = ${BLOB_RAD},
+		scan_radius = ${SCAN_RAD},
+		max_num_hits = 1000000)"                    >> ${config_path}
+	
+	echo "corrections = None"      >> ${config_path}
+
+	echo "${config_path}" >> "${CONFIG_LIST}"
+done
+
+echo "Config produced, initialising IC"
+# Initialise IC
+conda init bash
+source /scratch/halmazan/NEXT/IC_alter-blob-centre/init_IC.sh
+conda activate IC-3.8-2024-06-08
+
+# parallel execution
+cat "$CONFIG_LIST" | xargs -n 1 -P "$SLURM_CPUS_PER_TASK" -I{} city ${CITY} {}

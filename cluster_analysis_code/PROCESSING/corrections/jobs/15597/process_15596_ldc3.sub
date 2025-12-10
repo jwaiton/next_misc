@@ -1,0 +1,54 @@
+#!/bin/bash
+#SBATCH --partition=general
+#SBATCH --qos=regular
+#SBATCH --job-name=pre-thekla-processing
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=20G
+
+#SBATCH --error=errors/%x-%j.err
+#SBATCH --output=logs/%x-%j.out
+#SBATCH --mail-user=john.waiton@postgrad.manchester.ac.uk
+#SBATCH --mail-type=ALL
+
+echo "Initialise conda"
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/halmazan/miniconda/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/halmazan/miniconda/etc/profile.d/conda.sh" ]; then
+        . "/home/halmazan/miniconda/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/halmazan/miniconda/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+
+
+echo "Slurm job id is ${SLURM_JOB_ID}"
+
+RUN=15597
+TIMESTAMP=180725
+LDC=3
+MAP_PATH='/scratch/halmazan/NEXT/PROCESSING/corrections/cor_map/rough_geometry_map_v2.h5'
+
+echo "======================="
+echo "RUN ${RUN}"
+echo "TIMESTAMP ${TIMESTAMP}"
+echo "LDC ${LDC}"
+echo "MAP ${MAP_PATH}"
+echo "======================="
+
+
+conda init bash
+source /scratch/halmazan/NEXT/IC_alter-blob-centre/init_IC.sh
+conda activate IC-3.8-2024-06-08
+
+python3 /scratch/halmazan/NEXT/PROCESSING/corrections/bin/correct_select_150725.py ${RUN} ${TIMESTAMP} ${MAP_PATH} ${LDC}
