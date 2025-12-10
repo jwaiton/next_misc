@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "../../testing/notebooks"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../../IC_alter-blob-centre"
+		},
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../ICAROS"
+		}
+	],
+	"settings": {}
+}
