@@ -10,6 +10,7 @@
 import csv
 import numpy as np
 import traceback
+import matplotlib.pyplot as plt
 
 import plotting_funcs as plotf
 import fitting_funcs as fitf
@@ -119,7 +120,9 @@ def FOM(data, signal_func, background_func, cut_list = None, seeds = None, fitti
 
 
             del blob_data, ns, nb
+            print(f"FOM: {fom_check} +/- {fom_err}")
             print('=' * 30) 
+            
 
         except Exception as exc:
             print(f'FIT BROKE!')
@@ -148,16 +151,18 @@ def FOM(data, signal_func, background_func, cut_list = None, seeds = None, fitti
     except:
         pass
 
-
-    # plot and write
-    plt.errorbar(cut_list, fom, y_err = fom_err, label = 'FIT', linestyle = 'dashed')
-    plt.legend()
-    plt.title('FOM {label}')
-    plt.xlabel('Blob 2 energy threshold (MeV)')
-    plt.ylabel('FOM')
-    plt.savefig(f"{'/'.join(output_path.split('/')[:-1])}/FOM_fit.png") 
-    plt.close()
-
+    try:
+        # plot and write
+        plt.errorbar(cut_list, fom, y_err = fom_err, label = 'FIT', linestyle = 'dashed')
+        plt.legend()
+        plt.title('FOM {label}')
+        plt.xlabel('Blob 2 energy threshold (MeV)')
+        plt.ylabel('FOM')
+        plt.savefig(f"{'/'.join(output_path.split('/')[:-1])}/FOM_fit.png") 
+        plt.close()
+    except Exception as err:
+        print(err)
+    
     with open(f'{output_path}/FOM.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerows(zip(cut_list, fom))
@@ -167,4 +172,4 @@ def FOM(data, signal_func, background_func, cut_list = None, seeds = None, fitti
         writer.writerows(zip(b, b_err))
 
 
-    return dict(fom = fom, cut_list = cut_list, nb_l = nb_l, ns_l = ns_l, e = e, b = b, e_err = e_rr, b_err = b_err, fom_err = fom_err)
+    return dict(fom = fom, cut_list = cut_list, nb_l = nb_l, ns_l = ns_l, e = e, b = b, e_err = e_err, b_err = b_err, fom_err = fom_err)
