@@ -185,6 +185,27 @@ def FOM(data, signal_func, background_func,
             # reset for next iteration
             zfit.param.set_values(model.get_params(), result)
 
+            # visualise the fit if asked for
+            if plot:
+                sig_ext, bck_ext = model.pdfs
+                x_space = np.linspace(*fitting_info['fit_range'], 200)
+                x_zfit  = zfit.Data.from_numpy(obs = obs, array = x_space)
+
+                plt.hist(blob_data['energy'].to_numpy(),
+                         bins = fitting_info['bins'],
+                         range = fitting_info['fit_range'],
+                         alpha = 0.6,
+                         label = 'DATA')
+                # scale factor on data
+                scale  = (fitting_info['fit_range'][1] - fitting_info['fit_range'][0]) / fitting_info['bins']
+                plt.plot(x_space, sig_ext.pdf(x_zfit) * ns * scale, label = 'Signal', linestyle = 'dashed')
+                plt.plot(x_space, bck_ext.pdf(x_zfit) * nb * scale, label = 'Background')
+                plt.plot(x_space, (sig_ext.pdf(x_zfit) * ns + bck_ext.pdf(x_zfit) * nb) * scale, label = 'Total', linestyle = 'dashed')
+
+                plt.legend()
+                plt.show()
+
+
         except Exception as err:
             print("FIT BROKE!")
             print(traceback.format_exc())
