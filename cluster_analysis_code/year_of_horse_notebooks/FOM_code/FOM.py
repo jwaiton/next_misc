@@ -90,7 +90,7 @@ def FOM(data, signal_func, background_func, cut_list = None, seeds = None, fitti
             print('=' * 30, flush = True)
 
             # apply the signal fit here
-            ns, nb = fitf.sb_fit(blob_data, sig_norm_ext, bck_norm_ext, fitting_info, seeds)
+            ns, nb = fitf.sb_fit(blob_data, sig_norm_ext, bck_norm_ext, fitting_info, seeds, plot = plot)
             
             # boring appending
             ns_l.append(ns)
@@ -153,7 +153,7 @@ def FOM(data, signal_func, background_func, cut_list = None, seeds = None, fitti
 
     try:
         # plot and write
-        plt.errorbar(cut_list, fom, y_err = fom_err, label = 'FIT', linestyle = 'dashed')
+        plt.errorbar(cut_list, fom, yerr = fom_err, label = 'FIT', linestyle = 'dashed')
         plt.legend()
         plt.title('FOM {label}')
         plt.xlabel('Blob 2 energy threshold (MeV)')

@@ -13,6 +13,7 @@ from   iminuit import Minuit
 import probfit
 from scipy.stats import crystalball, norm
 import traceback
+import matplotlib.pyplot as plt
 
 # misc functions
 
@@ -91,7 +92,13 @@ def exp_no_N(x, tau):
     return np.exp(-x/ tau)
     
 
-
+def linear(x, m, c):
+    '''
+    linear projection for the data
+    '''
+    return m*x + c
+    
+    
 ##################################################################
 #####                    MINUIT FITTING FUNCS                #####
 ##################################################################
@@ -128,7 +135,7 @@ def gaussian_fit(data, fitting_info, plot = False):
 
         plt.xlabel('Track energy (Mev)')
         plt.ylabel('Counts/bin')
-        lh_g.show(bins=fitting_info['bins']+1, parts = True)
+        m_g.show(bins=fitting_info['bins']+1, parts = True)
 
     # pull out relevant info
     fit_params = {}
@@ -137,7 +144,7 @@ def gaussian_fit(data, fitting_info, plot = False):
     return (fit_params['loc'], fit_params['scale'])
 
 
-def sb_fit(data, sig_pdf, bck_pdf, fitting_info, seeds):
+def sb_fit(data, sig_pdf, bck_pdf, fitting_info, seeds, plot = False):
     '''
     apply the combined signal and background fits to the data
     '''
@@ -146,7 +153,7 @@ def sb_fit(data, sig_pdf, bck_pdf, fitting_info, seeds):
     
     # combine s&b
     pdf_sb = probfit.AddPdf(sig_pdf, bck_pdf)
-    lh_sb  = probfit.UnbinnedLH(pdf_sb, blob_data, extended = True)
+    lh_sb  = probfit.BinnedLH(pdf_sb, blob_data, extended = True)
 
     # seed extraction 
     vals = list(seeds.values())
@@ -166,13 +173,40 @@ def sb_fit(data, sig_pdf, bck_pdf, fitting_info, seeds):
     # minuit shenans
     m_sb = Minuit(lh_sb, **seeds,
                   fix_loc = True, # this is assuming your fit is gaussian using loc and scale as mu and sigma
-                  limit_tau = (0.1, None),
+                  #limit_tau = (0.1, None),
+                  limit_Nb    = (0, None),
+                  limit_Ns    = (0, None),
+                  limit_scale = (1e-4, None),
                   print_level = 2) 
     m_sb.migrad()
 
+    
+    if plot: # hardcoded for linear and gaussian.
+        heights, bins, _ = plt.hist(blob_data, fitting_info['bins'])
+        bin_width = bins[1] - bins[0]
+        x = np.linspace(fitting_info['fit_range'][0], fitting_info['fit_range'][1], 100)
+    
+        v = dict(zip(m_sb.parameters, m_sb.args))
+        Ns = v['Ns']
+        Nb = v['Nb']
+    
+        sig = Ns * sig_pdf(x, v['loc'], v['scale']) * bin_width
+        bck = Nb * bck_pdf(x, v['m'], v['c']) * bin_width
+    
+        plt.plot(x, sig + bck, label='total')
+        plt.plot(x, sig, label='signal')
+        plt.plot(x, bck, label='background')
+        plt.xlabel("Track energy (MeV)")
+        plt.ylabel("Counts/bin")
+        plt.legend()
+        plt.show()
+    
     # pull out relevant info
     fit_params = {}
     [add_element(fit_params, m_sb.params[i][1], m_sb.params[i][2]) for i in range(len(m_sb.params))]
-
+    
+    print('Fit parameters')
+    print(fit_params)
+    
     return (fit_params['Ns'], fit_params['Nb'])
 

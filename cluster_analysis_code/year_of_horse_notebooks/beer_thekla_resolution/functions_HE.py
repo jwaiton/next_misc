@@ -166,7 +166,7 @@ def plot_voxels(df, base_vsize = 12):
     plt.show(fig)
 
 
-def raw_plotter(q, evt, pitch = 15.55, param = 'Q', title = ''):
+def raw_plotter(q, evt, pitch = 15.55):
     '''
     just plots the hits, nothing smart
     '''
@@ -177,24 +177,19 @@ def raw_plotter(q, evt, pitch = 15.55, param = 'Q', title = ''):
     yy = np.arange(q.Y.min(), q.Y.max() + pitch, pitch)
     zz = np.sort(q.Z.unique())
 
-    eps = sys.float_info.epsilon
-
-    axes[0].hist2d(q.X, q.Y, bins=[xx, yy], weights=q[param], cmin=eps);
+    axes[0].hist2d(q.X, q.Y, bins=[xx, yy], weights=q.Q, cmin=0.0001);
     axes[0].set_xlabel('X (mm)');
     axes[0].set_ylabel('Y (mm)');
 
-    axes[1].hist2d(q.X, q.Z, bins=[xx, zz], weights=q[param], cmin=eps);
+    axes[1].hist2d(q.X, q.Z, bins=[xx, zz], weights=q.Q, cmin=0.0001);
     axes[1].set_xlabel('X (mm)');
     axes[1].set_ylabel('Z (mm)');
 
 
-    axes[2].hist2d(q.Y, q.Z, bins=[yy, zz], weights=q[param], cmin=eps);
+    axes[2].hist2d(q.Y, q.Z, bins=[yy, zz], weights=q.Q, cmin=0.0001);
     axes[2].set_xlabel('Y (mm)');
     axes[2].set_ylabel('Z (mm)');
-    if (title == '' or title is None):
-        fig.suptitle("rebinned in Z")
-    else:
-        fig.suptitle(f'{title}')
+    fig.suptitle("rebinned in Z")
     plt.show(fig)
 
 
