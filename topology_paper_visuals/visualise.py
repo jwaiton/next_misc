@@ -17,12 +17,12 @@ plt.rcParams.update({
     "font.serif": ["Computer Modern Roman"],
 
     # Font sizes (match your LaTeX doc's font size)
-    "font.size": 12,
-    "axes.titlesize": 16,
-    "axes.labelsize": 14,
-    "xtick.labelsize": 12,
-    "ytick.labelsize": 12,
-    "legend.fontsize": 12,
+    "font.size": 12*2,
+    "axes.titlesize": 16*2,
+    "axes.labelsize": 14*2,
+    "xtick.labelsize": 12*2,
+    "ytick.labelsize": 12*2,
+    "legend.fontsize": 12*2,
 
     # Figure size — match LaTeX text width
     # For A4 with default margins: ~6.3in wide
@@ -34,19 +34,22 @@ plt.rcParams.update({
     "xtick.major.width": 0.8,
     "ytick.major.width": 0.8,
 
+    "savefig.bbox": "tight",
+    "savefig.pad_inches": 0.05,
 })
 
-def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_locations = None, blob_energies = None, text_pos = None):
+def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_locations = None, blob_energies = None, text_pos = None, y_axis_label = True):
     '''
     just plots the hits, nothing smart
     '''
 
-    fig, ax = plt.subplots(figsize = (8,7))
+    fig, ax = plt.subplots(figsize = (6.3,5))
     xx = np.arange(q.X.min() - pitch*2, q.X.max() + pitch*2, pitch)
     zz = np.sort(q.Z.unique())
     ax.hist2d(q.X, q.Z, bins=[xx, zz], weights=q.Q, cmin=0.0000001, zorder=1);
     ax.set_xlabel('X (mm)');
-    ax.set_ylabel('Z (mm)');
+    if y_axis_label:
+        ax.set_ylabel('Z (mm)');
 
     if blob_locations is not None:
         # assume ((x1,y1),(x2,y2))
@@ -57,9 +60,9 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
                           linewidth=2, zorder=2, label = 'B1')
         if blob_energies is not None:
             if text_pos is None:
-                ax.text(cx + 35 + 0.15, cy + 35 +  0.15, f'E: {blob_energies[0]:.2f} MeV',  fontsize=14, zorder=3)
+                ax.text(cx + 35 + 0.15, cy + 35 +  0.15, f'E: {blob_energies[0]:.2f} MeV',  fontsize=14*2, zorder=3)
             else:
-                ax.text(cx + text_pos[0][0], cy + text_pos[0][1], f'E: {blob_energies[0]:.2f} MeV',  fontsize=14, zorder=3)
+                ax.text(cx + text_pos[0][0], cy + text_pos[0][1], f'E: {blob_energies[0]:.2f} MeV',  fontsize=14*2, zorder=3)
 
 
 
@@ -67,13 +70,13 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
         cy = blob_locations[1][1]
 
         circle_B2 = patches.Circle((blob_locations[1][0], blob_locations[1][1]), radius=35,
-                          facecolor='none', edgecolor='blue', linestyle = 'dotted',
+                          facecolor='none', edgecolor='magenta', linestyle = 'dotted',
                           linewidth=2, zorder=2, label = 'B2')
         if blob_energies is not None:
             if text_pos is None:
-                ax.text(cx + 35 + 0.15, cy + 35 + 0.15, f'E: {blob_energies[1]:.2f} MeV',  fontsize=14, zorder=3)
+                ax.text(cx + 35 + 0.15, cy + 35 + 0.15, f'E: {blob_energies[1]:.2f} MeV',  fontsize=14*2, zorder=3)
             else:
-                ax.text(cx + text_pos[1][0], cy + text_pos[1][1], f'E: {blob_energies[1]:.2f} MeV',  fontsize=14, zorder=3)
+                ax.text(cx + text_pos[1][0], cy + text_pos[1][1], f'E: {blob_energies[1]:.2f} MeV',  fontsize=14*2, zorder=3)
 
 
         ax.add_patch(circle_B1)
@@ -86,8 +89,8 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
         ax.set_xlim(plot_lims[0][0], plot_lims[0][1])
         ax.set_ylim(plot_lims[1][0], plot_lims[1][1])
     ax.legend()
-    plt.savefig(f"plots/{title.replace(' ', '_')}_{evt}.pdf")
-    plt.savefig(f"plots/{title.replace(' ', '_')}_{evt}.png")
+    plt.savefig(f"plots/{title.replace(' ', '_')}_{evt}.pdf", bbox_inches='tight', pad_inches = 0.05)
+    plt.savefig(f"plots/{title.replace(' ', '_')}_{evt}.png", bbox_inches='tight', pad_inches = 0.05)
     plt.show()
 
 
@@ -155,7 +158,7 @@ raw_plotter(x, evt, title = f'Candidate signal event',
             blob_locations = ((df_out['blob1_x'].values[0],df_out['blob1_z'].values[0]),
                               (df_out['blob2_x'].values[0],df_out['blob2_z'].values[0])),
             blob_energies = (df_out['eblob1'].values[0], df_out['eblob2'].values[0]),
-            text_pos = ((35, 27), (22, 30)))
+            text_pos = ((35, 27), (0, -47)))
             #blob_locations = ((327.8, 1014.0), (246.7, 852.1)))
 
 
@@ -182,6 +185,6 @@ raw_plotter(y, evt, title = f'Candidate background event',
                              (df_out['blob2_x'].values[0],df_out['blob2_z'].values[0])),
             plot_lims = ((-480, -50), (900, 1200)),
             blob_energies = (df_out['eblob1'].values[0], df_out['eblob2'].values[0]),
-            text_pos = ((30, 40), (22, 30)))
+            text_pos = ((0, 40), (-42, -55)))
 
 
