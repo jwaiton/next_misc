@@ -120,15 +120,14 @@ def main():
 
     bax = brokenaxes(ylims=((0.79e6, 0.81e6), (1.38e6, 1.76e6)), hspace=0.0, d=0.005, subplot_spec=gs[0])
     bax.plot(normalised_baselined_flipped, rebin_times)
-    bax.axhspan(0.799e6, 0.806e6, alpha = 0.2, color = 'orange', label = 'S1')
+    bax.axhspan(0.799e6, 0.806e6, alpha = 0.3, color = 'orange', label = 'S1')
     bax.axhspan(1.38e6, 1.74e6, alpha = 0.2, color = 'blue', label = 'S2')
     handles, labels = [], []
     for ax in bax.axs:
         h, l = ax.get_legend_handles_labels()
         handles = h
         labels = l
-    bax.set_xlabel('AU')
-    bax.set_ylabel('time (ns)', labelpad=50)
+    bax.set_ylabel('time (ms)', labelpad=50)
 
     ax_left.legend(handles, labels, loc = 'upper left')
 
