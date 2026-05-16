@@ -2,8 +2,7 @@
 
 FOM function template
 
-jwaiton 240426
-
+jwaiton 160526
 '''
 
 import numpy  as np
