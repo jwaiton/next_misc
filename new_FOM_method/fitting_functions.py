@@ -96,6 +96,12 @@ def gaussian(x, mu, sigma, A):
     '''
     return A * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
 
+def gaussian_exp(x, mu, sigma, A, B, tau):
+    gauss = A * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
+    exp   = B * np.exp(tau * x)
+
+    return gauss + exp
+
 
 def gaussian_fit(data, bins):
     '''
@@ -104,8 +110,8 @@ def gaussian_fit(data, bins):
     counts, bin_edges = np.histogram(data, bins=bins)
     bin_centres       = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-    p0             = [np.mean(data), np.std(data), np.max(counts)]
-    popt, pcov     = curve_fit(gaussian, bin_centres, counts, p0=p0)
-    mu, sigma, A   = popt
+    p0             = [np.mean(data), 0.005, np.max(counts)/2, np.max(counts)/2, 0.001]
+    popt, pcov     = curve_fit(gaussian_exp, bin_centres, counts, p0=p0)
+    mu, sigma, A, _, _   = popt
 
     return mu, sigma, A

@@ -50,7 +50,7 @@ def build_model(signal_func, background_func, obs, seeds, name_suffix=""):
 
     model = zfit.pdf.SumPDF([sig_ext, bck_ext])
 
-    return model, Ns, Nb
+    return model, Ns, Nb, sig_pdf, bck_pdf
 
 
 def FOM(data, signal_func, background_func,
@@ -114,10 +114,11 @@ def FOM(data, signal_func, background_func,
     gaussian_fit_range = (1.55, 1.65)
     # gaussian fit prior
     gauss_hdst = cutf.energy_cuts(data, *gaussian_fit_range)
-    mu_seed, sigma_seed, A = fitf.gaussian_fit(gauss_hdst['energy'].to_numpy(), bins = 50)
+    mu_seed, sigma_seed, A = fitf.gaussian_fit(gauss_hdst['energy'].to_numpy(), bins = 15)
+    print(f'Initial gaussian and sigma: {mu_seed}, {sigma_seed}')
 
     if plot:
-        plotf.plot_hist(gauss_hdst, binning = 50, output = False, log = False, title = 'Gaussian pre-fit')
+        plotf.plot_hist(gauss_hdst, binning = 20, output = False, log = False, title = 'Gaussian pre-fit')
         # gauss fit
         x_space = np.linspace(*gaussian_fit_range, 200)
         y_fit   = fitf.gaussian(x_space, mu_seed, sigma_seed, A)
@@ -145,11 +146,11 @@ def FOM(data, signal_func, background_func,
             print('=' * 30)
 
             # generate model
-            model, Ns, Nb = build_model(signal_func,
-                                        background_func,
-                                        obs,
-                                        seeds,
-                                        name_suffix = f"_{i}")
+            model, Ns, Nb, sig_pdf, bck_pdf = build_model(signal_func,
+                                              background_func,
+                                              obs,
+                                              seeds,
+                                              name_suffix = f"_{i}")
 
             # fit da thing
             nll    = zfit.loss.ExtendedUnbinnedNLL(model = model, data = zfit_data)
@@ -157,8 +158,18 @@ def FOM(data, signal_func, background_func,
             result.hesse()
 
             # extract info
-            ns = result.params[Ns]['value']
-            nb = result.params[Nb]['value']
+            ns_total = result.params[Ns]['value']
+            nb_total = result.params[Nb]['value']
+
+
+            # limit integral over the peak
+            integral_range = (mu_seed - sigma_seed*3, mu_seed + sigma_seed*3)
+            sub_obs = zfit.Space('energy_range', limits = integral_range)
+
+            ns = ns_total * sig_pdf.integrate(sub_obs).numpy()
+            nb = nb_total * bck_pdf.integrate(sub_obs).numpy()
+
+            print(f'Printing over integral range {integral_range}')
 
             ns_l.append(ns)
             nb_l.append(nb)
@@ -177,7 +188,8 @@ def FOM(data, signal_func, background_func,
 
 
             print(f'Signal events: {ns}\nBackground events: {nb}')
-            print(f'Total events by addition: {nb+ns}\nTotal events by row counting: {blob_data.event.nunique()}')
+            print(f'Total events by addition: {nb_total+ns_total}\nTotal events by row counting: {blob_data.event.nunique()}')
+            print(f'Total events by addition in ROI: {nb+ns}\nTotal events by row counting in ROI: {blob_data[(blob_data['energy'] > integral_range[0]) & (blob_data['energy'] < integral_range[1])].event.nunique()}')
 
             print(f'FOM: {fom_check} +/- {fom_err[-1]}')
             print(f'=' * 30)
@@ -192,15 +204,22 @@ def FOM(data, signal_func, background_func,
                 x_zfit  = zfit.Data.from_numpy(obs = obs, array = x_space)
 
                 plt.hist(blob_data['energy'].to_numpy(),
-                         bins = fitting_info['bins'],
+                         bins = 200,#fitting_info['bins'],
                          range = fitting_info['fit_range'],
                          alpha = 0.6,
                          label = 'DATA')
+
+
+                bin_width = (fitting_info['fit_range'][1] - fitting_info['fit_range'][0]) / 200#fitting_info['bins']
+
+                plt.plot(x_space, sig_ext.pdf(x_zfit) * ns_total * bin_width, label='Signal', linestyle='dashed')
+                plt.plot(x_space, bck_ext.pdf(x_zfit) * nb_total * bin_width, label='Background')
+                plt.plot(x_space, (sig_ext.pdf(x_zfit) * ns_total + bck_ext.pdf(x_zfit) * nb_total) * bin_width, label='Total', linestyle='dashed')
                 # scale factor on data
-                scale  = (fitting_info['fit_range'][1] - fitting_info['fit_range'][0]) / fitting_info['bins']
-                plt.plot(x_space, sig_ext.pdf(x_zfit) * ns * scale, label = 'Signal', linestyle = 'dashed')
-                plt.plot(x_space, bck_ext.pdf(x_zfit) * nb * scale, label = 'Background')
-                plt.plot(x_space, (sig_ext.pdf(x_zfit) * ns + bck_ext.pdf(x_zfit) * nb) * scale, label = 'Total', linestyle = 'dashed')
+                #scale  = (fitting_info['fit_range'][1] - fitting_info['fit_range'][0]) / fitting_info['bins']
+                #plt.plot(x_space, sig_ext.pdf(x_zfit) * ns_total * scale, label = 'Signal', linestyle = 'dashed')
+                #plt.plot(x_space, bck_ext.pdf(x_zfit) * nb_total * scale, label = 'Background')
+                #plt.plot(x_space, (sig_ext.pdf(x_zfit) * ns_total + bck_ext.pdf(x_zfit) * nb_total) * scale, label = 'Total', linestyle = 'dashed')
 
                 plt.legend()
                 plt.show()
@@ -223,15 +242,17 @@ def FOM(data, signal_func, background_func,
             plt.ylabel("FOM")
             plt.savefig(f"{'/'.join(output_path.split('/')[:-1])}/FOM_fit.png")
             plt.close()
-
+        except Exception as err:
+            print(err)
+        try:
             # write csv
             with open(f"{output_path}/FOM.csv", "w") as f:
                 writer = csv.writer(f)
-                writer.writerows(zip(cut_list, fom))
-                writer.writerows(zip(cut_list, fom_err))
-                writer.writerows(zip(ns_l, nb_l))
-                writer.writerows(zip(e, e_err))
-                writer.writerows(zip(b, b_err))
+                writer.writerows(zip(cut_list,          [float(x) for x in fom]))
+                writer.writerows(zip(cut_list,          [float(x) for x in fom_err]))
+                writer.writerows(zip([float(x) for x in ns_l], [float(x) for x in nb_l]))
+                writer.writerows(zip([float(x) for x in e],    [float(x) for x in e_err]))
+                writer.writerows(zip([float(x) for x in b],    [float(x) for x in b_err]))
         except Exception as err:
             print(err)
 
