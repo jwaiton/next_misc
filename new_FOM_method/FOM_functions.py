@@ -59,7 +59,8 @@ def FOM(data, signal_func, background_func,
         fitting_info = None,
         plot         = False,
         output_path  = None,
-        label        = None):
+        label        = None,
+        verbose      = True):
 
 
     '''
@@ -115,7 +116,8 @@ def FOM(data, signal_func, background_func,
     # gaussian fit prior
     gauss_hdst = cutf.energy_cuts(data, *gaussian_fit_range)
     mu_seed, sigma_seed, A = fitf.gaussian_fit(gauss_hdst['energy'].to_numpy(), bins = 15)
-    print(f'Initial gaussian and sigma: {mu_seed}, {sigma_seed}')
+    if verbose:
+        print(f'Initial gaussian and sigma: {mu_seed}, {sigma_seed}')
 
     if plot:
         plotf.plot_hist(gauss_hdst, binning = 20, output = False, log = False, title = 'Gaussian pre-fit')
@@ -140,10 +142,10 @@ def FOM(data, signal_func, background_func,
         try:
             blob_data = data[(data['eblob2'] > cut)]
             zfit_data = zfit.Data.from_numpy(array=blob_data['energy'].to_numpy(), obs = obs)
-
-            print('=' * 30)
-            print(f'Blob cut: {cut} MeV')
-            print('=' * 30)
+            if verbose:
+                print('=' * 30)
+                print(f'Blob cut: {cut} MeV')
+                print('=' * 30)
 
             # generate model
             model, Ns, Nb, sig_pdf, bck_pdf = build_model(signal_func,
@@ -169,7 +171,8 @@ def FOM(data, signal_func, background_func,
             ns = ns_total * sig_pdf.integrate(sub_obs).numpy()
             nb = nb_total * bck_pdf.integrate(sub_obs).numpy()
 
-            print(f'Printing over integral range {integral_range}')
+            if verbose:
+                print(f'Printing over integral range {integral_range}')
 
             ns_l.append(ns)
             nb_l.append(nb)
@@ -186,13 +189,13 @@ def FOM(data, signal_func, background_func,
             b_err.append(errf.ratio_error(b_check, nb, nb_l[0], np.sqrt(nb), np.sqrt(nb_l[0])))
             fom_err.append(errf.fom_error(e_check, b_check, e_err[i], b_err[i]))
 
+            if verbose:
+                print(f'Signal events: {ns}\nBackground events: {nb}')
+                print(f'Total events by addition: {nb_total+ns_total}\nTotal events by row counting: {blob_data.event.nunique()}')
+                print(f'Total events by addition in ROI: {nb+ns}\nTotal events by row counting in ROI: {blob_data[(blob_data['energy'] > integral_range[0]) & (blob_data['energy'] < integral_range[1])].event.nunique()}')
 
-            print(f'Signal events: {ns}\nBackground events: {nb}')
-            print(f'Total events by addition: {nb_total+ns_total}\nTotal events by row counting: {blob_data.event.nunique()}')
-            print(f'Total events by addition in ROI: {nb+ns}\nTotal events by row counting in ROI: {blob_data[(blob_data['energy'] > integral_range[0]) & (blob_data['energy'] < integral_range[1])].event.nunique()}')
-
-            print(f'FOM: {fom_check} +/- {fom_err[-1]}')
-            print(f'=' * 30)
+                print(f'FOM: {fom_check} +/- {fom_err[-1]}')
+                print(f'=' * 30)
 
             # reset for next iteration
             zfit.param.set_values(model.get_params(), result)
