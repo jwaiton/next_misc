@@ -209,7 +209,7 @@ def FOM(data, signal_func, background_func,
                          bins = 200,#fitting_info['bins'],
                          range = fitting_info['fit_range'],
                          alpha = 0.6,
-                         label = 'DATA')
+                         label = 'Data')
 
 
                 bin_width = (fitting_info['fit_range'][1] - fitting_info['fit_range'][0]) / 200#fitting_info['bins']
@@ -222,8 +222,10 @@ def FOM(data, signal_func, background_func,
                 #plt.plot(x_space, sig_ext.pdf(x_zfit) * ns_total * scale, label = 'Signal', linestyle = 'dashed')
                 #plt.plot(x_space, bck_ext.pdf(x_zfit) * nb_total * scale, label = 'Background')
                 #plt.plot(x_space, (sig_ext.pdf(x_zfit) * ns_total + bck_ext.pdf(x_zfit) * nb_total) * scale, label = 'Total', linestyle = 'dashed')
-
+                plt.xlabel('Energy (MeV)')
+                plt.xlim([1.4, 1.8])
                 plt.legend()
+                plt.savefig(f'{output_path}/FOM_fit_{cut:.2f}MeV.pdf')
                 plt.show()
 
 
@@ -243,6 +245,7 @@ def FOM(data, signal_func, background_func,
             plt.xlabel("Blob 2 energy threshold (MeV)")
             plt.ylabel("FOM")
             plt.savefig(f"{'/'.join(output_path.split('/')[:-1])}/FOM_fit.png")
+            plt.savefig(f"{'/'.join(output_path.split('/')[:-1])}/FOM_fit.pdf")
             plt.close()
         except Exception as err:
             print(err)
@@ -258,3 +261,4 @@ def FOM(data, signal_func, background_func,
         except Exception as err:
             print(err)
 
+    return result
