@@ -12,9 +12,11 @@ sys.path.append('/home/e78368jw/Documents/NEXT_CODE/IC/')
 os.environ['ICTDIR']='/home/e78368jw/Documents/NEXT_CODE/IC/'
 
 from invisible_cities.cities.components   import track_blob_info_creator_extractor
-from invisible_cities.io.hits_io          import hits_from_df
 from invisible_cities.reco.peak_functions import rebin_times_and_waveforms
-from invisible_cities.reco.hits_functions  import drop_isolated_clusters
+try:
+    from invisible_cities.reco.hits_functions  import drop_isolated_clusters
+except:
+    from invisible_cities.reco.deconv_functions import drop_isolated_clusters
 plt.rcParams.update({
     # Use LaTeX for text rendering
     "text.usetex": True,
@@ -49,7 +51,6 @@ def raw_plotter(q, evt, pitch = 15.55):
     '''
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 6))
-
     xx = np.arange(q.X.min(), q.X.max() + pitch, pitch)
     yy = np.arange(q.Y.min(), q.Y.max() + pitch, pitch)
     zz = np.sort(q.Z.unique())
@@ -107,7 +108,7 @@ def main():
     zz = np.sort(data.Z.unique())
     h = ax_left.hist2d(data.X, data.Z, bins=[xx, zz], weights=data.Q, cmin=0.0001);
     ax_left.set_xlim(ax_left.get_xlim()[0] - 10, ax_left.get_xlim()[1] + 10)
-    ax_left.set_ylim(ax_left.get_ylim()[0] - 35, ax_left.get_ylim()[1] + 20)
+    ax_left.set_ylim(ax_left.get_ylim()[0] - 55, ax_left.get_ylim()[1] + 20)
     ax_left.set_xlabel('X (mm)')
     ax_left.set_ylabel('Z (mm)')
 
@@ -117,19 +118,33 @@ def main():
     ax_left.spines['right'].set_visible(True)
 
     # right subplot - brokenaxes
+    s1_region = (0.78e6, 0.82e6)
+    s2_region = (1.375e6, 1.76e6)
 
-    bax = brokenaxes(ylims=((0.79e6, 0.81e6), (1.38e6, 1.76e6)), hspace=0.0, d=0.005, subplot_spec=gs[0])
-    bax.plot(normalised_baselined_flipped, rebin_times)
-    bax.axhspan(0.799e6, 0.806e6, alpha = 0.3, color = 'orange', label = 'S1')
-    bax.axhspan(1.38e6, 1.74e6, alpha = 0.2, color = 'blue', label = 'S2')
+    bax = brokenaxes(ylims=(s1_region, s2_region), hspace=0.0, d=0.005, subplot_spec=gs[0])
+
+    # mask the s1 and s2
+    s1_mask = (rebin_times >= 0.795e6) & (rebin_times <= 0.806e6)
+    s2_mask = (rebin_times >= 1.38e6) &  (rebin_times <= 1.74e6)
+    no_mask = ~s1_mask & ~s2_mask
+
+    bax.plot(normalised_baselined_flipped, rebin_times, color = 'black', alpha = 0.2, linewidth = 4)
+    bax.plot(normalised_baselined_flipped[s1_mask], rebin_times[s1_mask], color = 'red', label = 'S1', linewidth = 4)
+    bax.plot(normalised_baselined_flipped[s2_mask], rebin_times[s2_mask], color = 'blue', linestyle = 'dotted', label = 'S2', linewidth = 4)
+
+
+    #bax.plot(normalised_baselined_flipped, rebin_times)
+    #bax.axhspan(0.799e6, 0.806e6, alpha = 0.3, color = 'orange', label = 'S1')
+    #bax.axhspan(1.38e6, 1.74e6, alpha = 0.2, color = 'blue', label = 'S2')
     handles, labels = [], []
     for ax in bax.axs:
         h, l = ax.get_legend_handles_labels()
         handles = h
         labels = l
     bax.set_ylabel('time (ms)', labelpad=50)
+    bax.set_xlabel('Measured light (a.u)', labelpad = 30)
 
-    ax_left.legend(handles, labels, loc = 'upper left')
+    bax.legend(handles, labels, loc = 'upper right', fontsize = 16, bbox_to_anchor=(1,1), borderaxespad = 0.2)
 
     for ax in bax.axs:
         ax.spines['right'].set_visible(True)

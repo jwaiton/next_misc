@@ -42,6 +42,8 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
     '''
     just plots the hits, nothing smart
     '''
+    text_fontsize = 20
+
 
     fig, ax = plt.subplots(figsize = (6.3,5))
     xx = np.arange(q.X.min() - pitch*2, q.X.max() + pitch*2, pitch)
@@ -60,9 +62,9 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
                           linewidth=2, zorder=2, label = 'B1')
         if blob_energies is not None:
             if text_pos is None:
-                ax.text(cx + 35 + 0.15, cy + 35 +  0.15, f'E: {blob_energies[0]:.2f} MeV',  fontsize=14*2, zorder=3)
+                ax.text(cx + 35 + 0.15, cy + 35 +  0.15, f'E: {blob_energies[0]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
             else:
-                ax.text(cx + text_pos[0][0], cy + text_pos[0][1], f'E: {blob_energies[0]:.2f} MeV',  fontsize=14*2, zorder=3)
+                ax.text(cx + text_pos[0][0], cy + text_pos[0][1], f'E: {blob_energies[0]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
 
 
 
@@ -74,9 +76,9 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
                           linewidth=2, zorder=2, label = 'B2')
         if blob_energies is not None:
             if text_pos is None:
-                ax.text(cx + 35 + 0.15, cy + 35 + 0.15, f'E: {blob_energies[1]:.2f} MeV',  fontsize=14*2, zorder=3)
+                ax.text(cx + 35 + 0.15, cy + 35 + 0.15, f'E: {blob_energies[1]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
             else:
-                ax.text(cx + text_pos[1][0], cy + text_pos[1][1], f'E: {blob_energies[1]:.2f} MeV',  fontsize=14*2, zorder=3)
+                ax.text(cx + text_pos[1][0], cy + text_pos[1][1], f'E: {blob_energies[1]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
 
 
         ax.add_patch(circle_B1)
@@ -158,7 +160,7 @@ raw_plotter(x, evt, title = f'Candidate signal event',
             blob_locations = ((df_out['blob1_x'].values[0],df_out['blob1_z'].values[0]),
                               (df_out['blob2_x'].values[0],df_out['blob2_z'].values[0])),
             blob_energies = (df_out['eblob1'].values[0], df_out['eblob2'].values[0]),
-            text_pos = ((35, 27), (0, -47)))
+            text_pos = ((35, 27), (-10, -52)))
             #blob_locations = ((327.8, 1014.0), (246.7, 852.1)))
 
 
