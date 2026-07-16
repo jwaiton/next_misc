@@ -128,10 +128,34 @@ def FOM(data, signal_func, background_func,
         plt.plot(x_space, y_fit, 'r-', label = f'Fit:\nmu: {mu_seed}\nsigma={sigma_seed}')
         plt.show()
 
+    # exponential/polynomial fit prior
+    exp_hdst_lower = cutf.energy_cuts(data, 0, gaussian_fit_range[0])
+    exp_hdst_upper = cutf.energy_cuts(data, gaussian_fit_range[1], data['energy'].max())
+    exp_hdst       = pd.concat([exp_hdst_lower, exp_hdst_upper], ignore_index = True, sort = False)
+
+    a_seed, c_seed = fitf.polynomial_fit(exp_hdst['energy'].to_numpy(), bins = 100)
+    ####tau_seed, B    = fitf.exp_fit(exp_hdst['energy'].to_numpy(), bins = 100)
+    if verbose:
+       #### print(f'Initial exponential seed: {tau_seed}, B: {B}')
+       print(f'Initial polynomial seed: a = {a_seed}, N = {c_seed}')
+
+    if plot:
+        plotf.plot_hist(data, binning = 100, output = False, log = False, title = 'exp pre-fit')
+        # gauss fit
+        x_space = np.linspace(1.4, 1.8, 500)
+        ####y_fit   = fitf.exponential(x_space, tau_seed, B)
+        ####plt.plot(x_space, y_fit, 'r-', label = f'Fit:\ntau: {tau_seed}\nB={B}')
+        y_fit   = fitf.polynomial(x_space, a_seed, c_seed)
+        plt.plot(x_space, y_fit, 'r-', label = f'Fit:\na: {a_seed}\nN: {c_seed}')
+        plt.show()
+
     # update the seeds
     if seeds is not None:
         seeds['signal']['mu_config'].update({"value": mu_seed, "floating" : False})
         seeds['signal']['sigma_config'].update({"value": sigma_seed, "floating" : False})
+        ####seeds['background']['lambda_config'].update({"value": tau_seed, "floating" : False})
+        seeds['background']['a_config'].update({"value": a_seed, "floating" : False})
+
 
     # initialise minimiser
     minimiser = zfit.minimize.Minuit(verbosity = 0)
