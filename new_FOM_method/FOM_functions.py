@@ -292,6 +292,13 @@ def FOM(data, signal_func, background_func,
                 plt.savefig(f'{output_path}/{cut:.2f}MeV.png')
                 plt.show()
 
+                # chi2
+                chi2      = np.sum(res**2)
+                ndof      = len(counts) - len(result.params) # number of degrees of freedom
+                chi2_ndof = chi2 / ndof
+                if verbose:
+                    print(f'Chi squared over degrees of freedom: {chi2_ndof}')
+
 
         except Exception as err:
             print("FIT BROKE!")
