@@ -17,6 +17,23 @@ import tensorflow as tf
 from zfit.interface import ZfitPDF
 
 
+class StepPDF(zfit.pdf.BasePDF):
+    def __init__(self, obs,
+                 step_loc_config=None,
+                 name_suffix="", **kwargs):
+        if step_loc_config is None:
+            step_loc_config = dict(value=1.58, lower=1.575, upper=1.61, floating=True)
+
+        self.step_loc = zfit.Parameter(f'step_loc{name_suffix}', **step_loc_config)
+        kwargs.setdefault('name', f'StepPDF{name_suffix}')
+        super().__init__(obs=obs, params={'step_loc': self.step_loc}, **kwargs)
+
+    def _unnormalized_pdf(self, x):
+        x_val = x.unstack_x()
+        return tf.cast(x_val <= self.step_loc, dtype=tf.float64)
+
+
+
 def gaussian_no_N(obs,
                   mu_config    = None,
                   sigma_config = None,
@@ -122,6 +139,17 @@ def poly_no_N(obs,
 
 
     return zfit.pdf.Chebyshev(obs = obs, coeffs = [a])
+
+
+def step_exp_no_N(obs, lambda_config=None, step_loc_config=None, name_suffix=""):
+    exp_pdf  = exp_no_N(obs, lambda_config=lambda_config, name_suffix=name_suffix)
+    step_pdf = StepPDF(obs, step_loc_config=step_loc_config, name_suffix=name_suffix)
+
+    frac = zfit.Parameter(f'frac{name_suffix}', 0.8, lower=0, upper=1)
+
+    return zfit.pdf.SumPDF([exp_pdf, step_pdf], fracs=frac)
+
+
 
 def exponential(x, tau, B):
     return B * np.exp(tau * x)

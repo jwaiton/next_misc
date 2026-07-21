@@ -133,28 +133,28 @@ def FOM(data, signal_func, background_func,
     exp_hdst_upper = cutf.energy_cuts(data, gaussian_fit_range[1], data['energy'].max())
     exp_hdst       = pd.concat([exp_hdst_lower, exp_hdst_upper], ignore_index = True, sort = False)
 
-    a_seed, c_seed = fitf.polynomial_fit(exp_hdst['energy'].to_numpy(), bins = 100)
-    ####tau_seed, B    = fitf.exp_fit(exp_hdst['energy'].to_numpy(), bins = 100)
+    ####a_seed, c_seed = fitf.polynomial_fit(exp_hdst['energy'].to_numpy(), bins = 100)
+    tau_seed, B    = fitf.exp_fit(exp_hdst['energy'].to_numpy(), bins = 100)
     if verbose:
-       #### print(f'Initial exponential seed: {tau_seed}, B: {B}')
-       print(f'Initial polynomial seed: a = {a_seed}, N = {c_seed}')
+       print(f'Initial exponential seed: {tau_seed}, B: {B}')
+       ####print(f'Initial polynomial seed: a = {a_seed}, N = {c_seed}')
 
     if plot:
         plotf.plot_hist(data, binning = 100, output = False, log = False, title = 'exp pre-fit')
         # gauss fit
         x_space = np.linspace(1.4, 1.8, 500)
-        ####y_fit   = fitf.exponential(x_space, tau_seed, B)
-        ####plt.plot(x_space, y_fit, 'r-', label = f'Fit:\ntau: {tau_seed}\nB={B}')
-        y_fit   = fitf.polynomial(x_space, a_seed, c_seed)
-        plt.plot(x_space, y_fit, 'r-', label = f'Fit:\na: {a_seed}\nN: {c_seed}')
+        y_fit   = fitf.exponential(x_space, tau_seed, B)
+        plt.plot(x_space, y_fit, 'r-', label = f'Fit:\ntau: {tau_seed}\nB={B}')
+        ####y_fit   = fitf.polynomial(x_space, a_seed, c_seed)
+        ####plt.plot(x_space, y_fit, 'r-', label = f'Fit:\na: {a_seed}\nN: {c_seed}')
         plt.show()
 
     # update the seeds
     if seeds is not None:
         seeds['signal']['mu_config'].update({"value": mu_seed, "floating" : False})
         seeds['signal']['sigma_config'].update({"value": sigma_seed, "floating" : False})
-        ####seeds['background']['lambda_config'].update({"value": tau_seed, "floating" : False})
-        seeds['background']['a_config'].update({"value": a_seed, "floating" : False})
+        seeds['background']['lambda_config'].update({"value": tau_seed, "floating" : False})
+        ####seeds['background']['a_config'].update({"value": a_seed, "floating" : False})
 
 
     # initialise minimiser
@@ -221,6 +221,15 @@ def FOM(data, signal_func, background_func,
 
                 print(f'FOM: {fom_check} +/- {fom_err[-1]}')
                 print(f'=' * 30)
+                print('Errors of each components of the fit.')
+                # Print errors for floating model parameters (e.g., step_loc or frac)
+                for param in result.params:
+                    if param not in (Ns, Nb):
+                        val = result.params[param]['value']
+                        # Check if hesse calculated an error for this param
+                        err_dict = result.params[param].get('hesse', {})
+                        err_val = err_dict.get('error', 'N/A')
+                        print(f'{param.name}: {val:.4f} +/- {err_val}')
 
             # reset for next iteration
             zfit.param.set_values(model.get_params(), result)
