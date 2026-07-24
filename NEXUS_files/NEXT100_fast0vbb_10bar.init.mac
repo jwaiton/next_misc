@@ -1,0 +1,39 @@
+## ----------------------------------------------------------------------------
+## nexus | NextFlex.init.mac
+##
+## Initialization macro to simulate Kr83 decays in the NextFlex detector
+## with generation and transportation of optical photons.
+##
+## The NEXT Collaboration
+## ----------------------------------------------------------------------------
+
+### GEOMETRY
+/nexus/RegisterGeometry Next100 
+
+
+### GENERATOR
+/nexus/RegisterGenerator Decay0Interface 
+
+
+### PERSISTENCY MANAGER
+/nexus/RegisterPersistencyManager PersistencyManager
+
+
+### ACTIONS
+/nexus/RegisterRunAction      DefaultRunAction
+/nexus/RegisterEventAction    DefaultEventAction
+/nexus/RegisterTrackingAction DefaultTrackingAction
+/nexus/RegisterSteppingAction AnalysisSteppingAction
+
+
+### PHYSICS
+/PhysicsList/RegisterPhysics G4EmStandardPhysics_option4
+/PhysicsList/RegisterPhysics G4DecayPhysics
+/PhysicsList/RegisterPhysics G4RadioactiveDecayPhysics
+/PhysicsList/RegisterPhysics G4OpticalPhysics
+/PhysicsList/RegisterPhysics NexusPhysics
+/PhysicsList/RegisterPhysics G4StepLimiterPhysics
+
+
+### EXTRA CONFIGURATION
+/nexus/RegisterMacro macros/NEXT100_fast0vbb_10bar.config.mac

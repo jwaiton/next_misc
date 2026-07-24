@@ -1,0 +1,49 @@
+## ----------------------------------------------------------------------------
+## nexus | NextFlex.config.mac
+##
+## Configuration  macro to simulate Kr83 decays in the NextFlex detector
+## with generation and transportation of optical photons.
+##
+## The NEXT Collaboration
+## ----------------------------------------------------------------------------
+
+### GEOMETRY
+
+# GAS SETTING
+/Geometry/Next100/gas              enrichedXe
+/Geometry/Next100/pressure     4. bar
+/Geometry/Next100/elfield          false
+
+/process/optical/processActivation Cerenkov false
+
+### GENERATOR
+# 0vbb
+/Generator/Decay0Interface/inputFile none
+/Generator/Decay0Interface/Xe136DecayMode 1
+/Generator/Decay0Interface/Ba136FinalState 0
+
+/Generator/Decay0Interface/decay_file bb0nu_file.dat
+
+/Generator/Decay0Interface/region AD_HOC
+/Geometry/Next100/specific_vertex  0. 0. 580. mm
+
+
+### PHYSICS
+/PhysicsList/Nexus/clustering           false
+/PhysicsList/Nexus/drift                false
+/PhysicsList/Nexus/electroluminescence  false
+
+
+### VERBOSITY
+/control/verbose   0
+/run/verbose       0
+/event/verbose     0
+/tracking/verbose  0
+
+/process/em/verbose 0
+
+
+### CONTROL
+/nexus/random_seed            -1
+/nexus/persistency/start_id   0
+/nexus/persistency/output_file /gluster/data/next/files/NEXUS_John/0vbb/4bar/N100_fastsim_0vbb_4bar
