@@ -1,6 +1,7 @@
 import glob
 from brokenaxes import brokenaxes
 import pdb
+from matplotlib._api import suppress_matplotlib_deprecation_warning
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import pandas as pd
@@ -17,6 +18,12 @@ try:
     from invisible_cities.reco.hits_functions  import drop_isolated_clusters
 except:
     from invisible_cities.reco.deconv_functions import drop_isolated_clusters
+
+from invisible_cities.cities.components import deconv_pmt
+from invisible_cities.cities.components import sensor_masker
+from invisible_cities.cities.components import calibrate_pmts
+from invisible_cities.cities.components import zero_suppress_wfs
+
 plt.rcParams.update({
     # Use LaTeX for text rendering
     "text.usetex": True,
@@ -71,7 +78,13 @@ def raw_plotter(q, evt, pitch = 15.55):
     plt.show()
 
 def main():
+    # setup the functions
     drop_clusters = drop_isolated_clusters([16., 16., 4.], 3, ['Ec', 'E'])
+    mask_sens     = sensor_masker('next100', 15281)
+    decon_pmt     = deconv_pmt('next100', 15281, 62400)
+    calib_pmt     = calibrate_pmts('next100', 15281, 100, 3)
+    zero_sup      = zero_suppress_wfs(0.1, 0.1)
+
     data = pd.read_hdf('data/S1_S2_plot/run_15281_0001_ldc1_trg2.v2.3.1.20250429.HEDesman.sophronia.h5', 'RECO/Events')
     data = data[data.event == 842]
     data = drop_clusters(data)
@@ -81,15 +94,40 @@ def main():
         raw_plotter(df, evt)
     with tb.open_file('data/S1_S2_plot/run_15281_0001_ldc1_trg2.waveforms.h5', "r") as h5in:
         rwf_data = h5in.root.RD.pmtrwf
-
+        sipm_data = h5in.root.RD.sipmrwf
         times       = np.arange(0, len(np.sum(rwf_data[0], axis = 0))*25, 25)
-        #import pdb; pdb.set_trace()
-        rebin_times, rebin_widths, rebin_wf =  rebin_times_and_waveforms(times, widths = np.tile(25, (len(times), 1)), waveforms = np.array([np.sum(rwf_data[2], axis = 0)]), rebin_stride = 160)
+        plt.plot(times, np.sum(rwf_data[2], axis = 0))
+        plt.title('pre deconvolution')
+        plt.show()
+        rwf_data = decon_pmt(rwf_data[2])
+
+        plt.plot(times, np.sum(rwf_data, axis = 0))
+        plt.title('post deconvolution ')
+        plt.show()
+
+        rwf_data, ccwfs_maw, cwf_sum, cwf_sum_maw = calib_pmt(rwf_data)
+        plt.plot(times, np.sum(rwf_data, axis = 0))
+        plt.title('post calibration')
+        plt.show()
+
+        rwf_data = np.sum(rwf_data, axis = 0)
+        s1_indices, s2_indices = zero_sup(cwf_sum, cwf_sum_maw)
+        print(s1_indices)
+        indices = set(tuple(s1_indices.tolist())) |  set(tuple(s2_indices.tolist()))
+        mask = np.zeros_like(rwf_data, dtype=bool)
+        mask[np.array(list(indices), dtype = int)] = True
+        rwf_data[~mask] = 0
+        plt.plot(times, rwf_data)
+        plt.title('post zero sup')
+        plt.show()
+       #import pdb; pdb.set_trace()
+        rebin_times, rebin_widths, rebin_wf =  rebin_times_and_waveforms(times, widths = np.tile(25, (len(times), 1)), waveforms = np.array([rwf_data]), rebin_stride = 160)
         #pdb.set_trace()
         summed_data = np.sum(rebin_wf, axis = 0)
         fig = plt.figure()
-        normalised_baselined_flipped = -summed_data + np.median(summed_data)
-        normalised_baselined_flipped = normalised_baselined_flipped / np.max(normalised_baselined_flipped)
+        #normalised_baselined_flipped = -summed_data + np.median(summed_data)
+        #normalised_baselined_flipped = normalised_baselined_flipped / np.max(normalised_baselined_flipped)
+        normalised_baselined_flipped = summed_data
         bax = brokenaxes(ylims=((0.7e6, 0.85e6), (1.3e6, 2.0e6)), hspace = 0.05)
 
         bax.plot(normalised_baselined_flipped, rebin_times )
