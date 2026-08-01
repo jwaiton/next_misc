@@ -1,5 +1,6 @@
 import glob
 from brokenaxes import brokenaxes
+import plot_info
 import pdb
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -14,195 +15,144 @@ sys.path.append('/home/e78368jw/Documents/NEXT_CODE/IC/')
 os.environ['ICTDIR']='/home/e78368jw/Documents/NEXT_CODE/IC/'
 
 from invisible_cities.cities.components   import track_blob_info_creator_extractor
-from invisible_cities.io.hits_io          import hits_from_df
 from invisible_cities.reco.peak_functions import rebin_times_and_waveforms
-from invisible_cities.reco.hits_functions  import drop_isolated_clusters
+from invisible_cities.reco.deconv_functions import drop_isolated_clusters
 from  invisible_cities.evm.event_model        import Cluster, Hit
 from invisible_cities.reco.paolina_functions import voxelize_hits
 from invisible_cities.types.ic_types import xy
 
-plt.rcParams.update({
-    # Use LaTeX for text rendering
-    "text.usetex": True,
-    "font.family": "serif",
-    "font.serif": ["Computer Modern Roman"],
 
-    # Font sizes (match your LaTeX doc's font size)
-    "font.size": 12*2,
-    "axes.titlesize": 16*2,
-    "axes.labelsize": 14*2,
-    "xtick.labelsize": 12*2,
-    "ytick.labelsize": 12*2,
-    "legend.fontsize": 12*2,
+def _setup_3d_panel(fig, position, view_elev=-25, view_azim=50,
+                     xlim=None, ylim=None, zlim=None):
+    """
+    Create and style a single 3D axes panel with consistent
+    labels, hidden tick labels, view angle, and (optionally)
+    shared data limits across panels.
 
-    # Figure size — match LaTeX text width
-    # For A4 with default margins: ~6.3in wide
-    "figure.figsize": (5.9, 5.9),  # golden ratio height
+    position : subplot spec, e.g. (nrows, ncols, index) or a
+               3-digit int like 111, or a SubplotSpec from GridSpec.
+    """
+    ax = fig.add_subplot(*position, projection='3d') if isinstance(position, tuple) \
+         else fig.add_subplot(position, projection='3d')
 
-    # Line/marker quality
-    "lines.linewidth": 1.5,
-    "axes.linewidth": 0.8,
-    "xtick.major.width": 0.8,
-    "ytick.major.width": 0.8,
-
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.05,
-})
-
-
-def plotter_3d(df, evt, cut_n_drop = True, show = True, clrbar = True, alpha = 0.90, min_s = 10, max_s = 15, cut_sensors = None, drop_sensors = None):
-    '''
-    evt_interest - df
-    evt          - event number
-
-    '''
-    # plot
-    evt_interest = df[df.event == evt]
-
-
-    xt = df.X
-    yt = df.Y
-    zt = df.Z
-    et = df.E
-
-    fig = plt.figure(figsize=(12,8))
-    #fig.suptitle('3D post deconvolution ' + str(evt), fontsize=30)
-    fig.suptitle(f'Candidate track', fontsize=36, y = 0.92)
-    ax = fig.add_subplot(111, projection='3d')
-
-
-
-    ets = et > 0 # eliminate small things for measurement
-
-    max_val = max(et[ets])
-    scaled_clipped = [max((v / max_val) * max_s, min_s) for v in et[ets]]
-
-    #p = ax.scatter(x[em], y[em], z[em], c=e[em], alpha=0.3, cmap='viridis')
-    #plt_sphere([(-track.blob2_x.values[0], -track.blob2_y.values[0], -track.blob2_z.values[0])], [blobR])
-    p = ax.scatter([xt[ets]], yt[ets], zt[ets], c=et[ets], alpha=alpha, cmap='viridis', s = scaled_clipped)#, s = et[ets])
-    #q = ax.scatter(xt, yt, zt, alpha = 0.3, color = 'red')
-
-    # overlay the blobs and their radii
-    #if clrbar:
-    #    cb = fig.colorbar(p, ax=ax)
-    #    cb.set_label('Energy (keV)')
-
-
-
-    ax.set_xlabel('x (mm)')#, labelpad = 15)#,fontsize=16)
-    ax.set_ylabel('y (mm)')#, labelpad = 15)#,fontsize=16)
-    ax.set_zlabel('z (mm)')#, labelpad = 20)#,fontsize=16)
-
+    ax.set_xlabel('x (mm)')
+    ax.set_ylabel('y (mm)')
+    ax.set_zlabel('z (mm)')
     ax.xaxis.set_ticklabels([])
     ax.yaxis.set_ticklabels([])
     ax.zaxis.set_ticklabels([])
+    ax.view_init(view_elev, view_azim)
+    ax.set_box_aspect([1, 1, 1])
+    ax.set_zlabel('z (mm)', labelpad=-10)  # push it down/away from the title
+    ax.set_xlabel('x (mm)', labelpad=-10)
+    ax.set_ylabel('y (mm)', labelpad=-10)
 
-    ax.view_init(-25, 50)
+    if xlim is not None: ax.set_xlim(xlim)
+    if ylim is not None: ax.set_ylim(ylim)
+    if zlim is not None: ax.set_zlim(zlim)
 
-    #ax.set_xlim([-300, -100])
-    #ax.set_ylim([250, 450])
-    #ax.set_zlim([1600, 1800])
-    #ax.view_init(20, -150)
+    return ax
 
-    #plt.savefig(f'gif_making/deconv/angle_{i}.png')
-    #plt.savefig(f'plots/hits_3d_{evt}.pdf')
-    if show:
-        plt.savefig('plots/voxelisation/hit_track.png', pad_inches=0.5)
-        plt.savefig('plots/voxelisation/hit_track.pdf')
-        plt.show()
-
-
+from matplotlib.colors import Normalize
+from matplotlib import cm
 
 
-def plot_voxels(df, base_vsize = 12):
+def plot_hits_3d(ax, df, evt, norm, alpha=0.90, min_s=10, max_s=15):
+    """
+    Draw a scatter-style 3D hit display onto an existing axes `ax`,
+    using a shared Normalize instance so color scale matches other
+    panels (e.g. a paired voxel plot).
+    """
+    sub = df[df.event == evt]
+    xt, yt, zt, et = sub.X, sub.Y, sub.Z, sub.E
+    ets = et > 0
+    max_val = max(et[ets])
+    scaled_clipped = [max((v / max_val) * max_s, min_s) for v in et[ets]]
+    p = ax.scatter(xt[ets], yt[ets], zt[ets], c=et[ets],
+                    alpha=alpha, cmap='viridis', s=scaled_clipped)
+    return p
 
-    xs = df.X
-    ys = df.Y
-    zs = df.Z
-    es = df.E
-
-    the_hits = []
-    for x, y, z, e in zip(xs, ys, zs, es):
-        if np.isnan(e): continue
-        h = Hit(0, Cluster(0, xy(x,y), xy(0,0), 0), z, e*1000, xy(0,0))
-        the_hits.append(h)
-
-    voxels = voxelize_hits(the_hits,
-                           np.array([base_vsize, base_vsize, base_vsize]), False)
-
-    vsizex = voxels[0].size[0]
-    vsizey = voxels[0].size[1]
-    vsizez = voxels[0].size[2]
+def plot_voxels_3d(ax, df, base_vsize=12):
+    """
+    Draw a voxelised 3D event display onto an existing axes `ax`.
+    Uses its own locally-computed normalization (0 to max voxel
+    energy) rather than a shared scale passed in from the caller.
+    """
+    voxels = voxelize_hits(df, np.array([base_vsize]*3), False)
+    vsizex, vsizey, vsizez = voxels[0].size
 
     min_corner_x = min(v.X for v in voxels) - vsizex/2.
     min_corner_y = min(v.Y for v in voxels) - vsizey/2.
     min_corner_z = min(v.Z for v in voxels) - vsizez/2.
-
 
     x = [np.round(v.X/vsizex) for v in voxels]
     y = [np.round(v.Y/vsizey) for v in voxels]
     z = [np.round(v.Z/vsizez) for v in voxels]
     e = [v.E for v in voxels]
 
-    x_min = int(min(x))
-    y_min = int(min(y))
-    z_min = int(min(z))
-
-    x_max = int(max(x))
-    y_max = int(max(y))
-    z_max = int(max(z))
+    x_min, y_min, z_min = int(min(x)), int(min(y)), int(min(z))
+    x_max, y_max, z_max = int(max(x)), int(max(y)), int(max(z))
 
     VOXELS = np.zeros((x_max-x_min+1, y_max-y_min+1, z_max-z_min+1))
-    #print(VOXELS.shape)
-
-    # sort through the event set the "turn on" the hit voxels
     cmap = cm.viridis
-    norm = Normalize(vmin=0, vmax=max(e))
+    norm = Normalize(vmin=0, vmax=max(e))  # local normalization, own scale
     colors = np.empty(VOXELS.shape, dtype=object)
 
-    for q in range(0, len(z)):
+    for q in range(len(z)):
         VOXELS[int(x[q])-x_min][int(y[q])-y_min][int(z[q])-z_min] = 1
         rgba = list(cmap(norm(e[q])))
-        rgba[3] = max(0.8, norm(e[q]))  # minimum alpha of 0.1
+        rgba[3] = max(0.8, norm(e[q]))
         colors[int(x[q])-x_min][int(y[q])-y_min][int(z[q])-z_min] = tuple(rgba)
 
-
-    # and plot everything
-    fig = plt.figure(figsize=(12,8))
-    ax = fig.add_subplot(111, projection='3d')
-    #a,b,c is spacing in mm needs an extra dim
-    a,b,c = np.indices((x_max-x_min+2, y_max-y_min+2, z_max-z_min+2))
+    a, b, c = np.indices((x_max-x_min+2, y_max-y_min+2, z_max-z_min+2))
     a = a*vsizex + min_corner_x
     b = b*vsizey + min_corner_y
     c = c*vsizez + min_corner_z
 
-    # a, b, c are the corners of the voxels
     ax.voxels(a, b, c, VOXELS, facecolors=colors)
-
-    ax.set_xlabel('x (mm)')#, labelpad = 15)#,fontsize=16)
-    ax.set_ylabel('y (mm)')#, labelpad = 15)#,fontsize=16)
-    ax.set_zlabel('z (mm)')#, labelpad = 20)#,fontsize=16)
-
-    ax.xaxis.set_ticklabels([])
-    ax.yaxis.set_ticklabels([])
-    ax.zaxis.set_ticklabels([])
+    return cmap, norm  # returned so caller can build its own colorbar if needed
 
 
+def plot_hits_and_voxels(df, evt, panel_size=5.0, base_vsize=12,
+                          suptitle=None, savepath=None, clrbar=True):
+    fig = plt.figure(figsize=(panel_size*2, panel_size))
+    if suptitle:
+        fig.suptitle(suptitle, y=0.95)
 
-    ax.view_init(-25, 50)
+    sub = df[df.event == evt]
+    ets = sub.E > 0
+    pad = base_vsize
+    xlim = (sub.X[ets].min() - pad, sub.X[ets].max() + pad)
+    ylim = (sub.Y[ets].min() - pad, sub.Y[ets].max() + pad)
+    zlim = (sub.Z[ets].min() - pad, sub.Z[ets].max() + pad)
 
-    sm = cm.ScalarMappable(cmap=cmap, norm=norm)
-    sm.set_array([])
-    #cb = fig.colorbar(sm, ax=ax, pad = 0.1)
-    #cb.set_label('Energy (keV)')
+    # --- shared normalization across both panels ---
+    voxels = voxelize_hits(sub, np.array([base_vsize]*3), False)
+    voxel_e = [v.E for v in voxels]
+    global_max = max(max(sub.E[ets]), max(voxel_e))
+    norm = Normalize(vmin=0, vmax=global_max)
+    cmap = cm.viridis
 
-    fig.suptitle('Voxelised track', y = 0.92, fontsize = '36')
-    #ax.view_init(-160, 90)
+    ax1 = _setup_3d_panel(fig, (1, 2, 1), xlim=xlim, ylim=ylim, zlim=zlim)
+    plot_hits_3d(ax1, df, evt, norm=norm)
+    ax1.set_title('Candidate track')
 
-    plt.savefig('plots/voxelisation/voxelisation.png', pad_inches=0.5)
-    plt.savefig('plots/voxelisation/voxelisation.pdf', pad_inches=0.5)
-    plt.show()
+    ax2 = _setup_3d_panel(fig, (1, 2, 2), xlim=xlim, ylim=ylim, zlim=zlim)
+    plot_voxels_3d(ax2, sub, base_vsize=base_vsize)
+    ax2.set_title('Voxelised track')
 
+    if clrbar:
+        sm = cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])
+        fig.colorbar(sm, ax=[ax1, ax2], shrink=0.6, label='Energy (keV)')
+
+    fig.subplots_adjust(wspace=0.05)
+
+    if savepath:
+        fig.savefig(savepath + '.png', dpi=300)
+        fig.savefig(savepath + '.pdf')
+
+    return fig, (ax1, ax2)
 
 
 def raw_plotter(q, evt, pitch = 15.55):
@@ -231,6 +181,10 @@ def raw_plotter(q, evt, pitch = 15.55):
     fig.suptitle(f"{evt}")
     plt.show()
 
+
+
+
+
 def main():
     drop_clusters = drop_isolated_clusters([16., 16., 4.], 3, ['Ec', 'E'])
     data = pd.read_hdf('data/S1_S2_plot/run_15281_0001_ldc1_trg2.v2.3.1.20250429.HEDesman.sophronia.h5', 'RECO/Events')
@@ -240,8 +194,15 @@ def main():
 
     for evt, df in data.groupby('event'):
         raw_plotter(df, evt)
-        plotter_3d(df, evt)
-        plot_voxels(df, base_vsize = 21)
+
+        plot_info.apply_style(scale_factor = (1/1.35))
+        plot_hits_and_voxels(
+            df, evt,
+            base_vsize=21,
+            savepath=f'plots/voxelisation/event_{evt}',
+            clrbar = False
+        )
+
 
 
 
