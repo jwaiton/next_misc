@@ -2,6 +2,7 @@ import glob
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import pandas as pd
+import plot_info
 import numpy as np
 import sys, os
 
@@ -10,34 +11,6 @@ os.environ['ICTDIR']='/home/e78368jw/Documents/NEXT_CODE/IC/'
 
 from invisible_cities.cities.components import track_blob_info_creator_extractor
 from invisible_cities.io.hits_io        import hits_from_df
-plt.rcParams.update({
-    # Use LaTeX for text rendering
-    "text.usetex": True,
-    "font.family": "serif",
-    "font.serif": ["Computer Modern Roman"],
-
-    # Font sizes (match your LaTeX doc's font size)
-    "font.size": 12*2,
-    "axes.titlesize": 16*2,
-    "axes.labelsize": 14*2,
-    "xtick.labelsize": 12*2,
-    "ytick.labelsize": 12*2,
-    "legend.fontsize": 12*2,
-
-    # Figure size — match LaTeX text width
-    # For A4 with default margins: ~6.3in wide
-    "figure.figsize": (5.9, 5.9),  # golden ratio height
-
-    # Line/marker quality
-    "lines.linewidth": 1.5,
-    "axes.linewidth": 0.8,
-    "xtick.major.width": 0.8,
-    "ytick.major.width": 0.8,
-
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.05,
-})
-
 def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_locations = None, blob_energies = None, text_pos = None, y_axis_label = True):
     '''
     just plots the hits, nothing smart
@@ -62,9 +35,11 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
                           linewidth=2, zorder=2, label = 'B1')
         if blob_energies is not None:
             if text_pos is None:
-                ax.text(cx + 35 + 0.15, cy + 35 +  0.15, f'E: {blob_energies[0]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
+                #ax.text(cx + 35 + 0.15, cy + 35 +  0.15, f'E: {blob_energies[0]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
+                ax.text(cx + 35 + 0.15, cy + 35 +  0.15, f'E: {blob_energies[0]:.2f} MeV', zorder=3)
             else:
-                ax.text(cx + text_pos[0][0], cy + text_pos[0][1], f'E: {blob_energies[0]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
+                #ax.text(cx + text_pos[0][0], cy + text_pos[0][1], f'E: {blob_energies[0]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
+                ax.text(cx + text_pos[0][0], cy + text_pos[0][1], f'E: {blob_energies[0]:.2f} MeV', zorder=3)
 
 
 
@@ -76,9 +51,11 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
                           linewidth=2, zorder=2, label = 'B2')
         if blob_energies is not None:
             if text_pos is None:
-                ax.text(cx + 35 + 0.15, cy + 35 + 0.15, f'E: {blob_energies[1]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
+                #ax.text(cx + 35 + 0.15, cy + 35 + 0.15, f'E: {blob_energies[1]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
+                ax.text(cx + 35 + 0.15, cy + 35 + 0.15, f'E: {blob_energies[1]:.2f} MeV', zorder=3)
             else:
-                ax.text(cx + text_pos[1][0], cy + text_pos[1][1], f'E: {blob_energies[1]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
+                #ax.text(cx + text_pos[1][0], cy + text_pos[1][1], f'E: {blob_energies[1]:.2f} MeV',  fontsize=text_fontsize, zorder=3)
+                ax.text(cx + text_pos[1][0], cy + text_pos[1][1], f'E: {blob_energies[1]:.2f} MeV',  zorder=3)
 
 
         ax.add_patch(circle_B1)
@@ -94,6 +71,11 @@ def raw_plotter(q, evt, pitch = 15.55, title = None, plot_lims = None, blob_loca
     plt.savefig(f"plots/{title.replace(' ', '_')}_{evt}.pdf", bbox_inches='tight', pad_inches = 0.05)
     plt.savefig(f"plots/{title.replace(' ', '_')}_{evt}.png", bbox_inches='tight', pad_inches = 0.05)
     plt.show()
+
+
+# setup the style
+plot_info.apply_style(scale_factor = 1/(1.15))
+
 
 
 files = glob.glob('data/*.h5')

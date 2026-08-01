@@ -1,6 +1,7 @@
 import glob
 from brokenaxes import brokenaxes
 import pdb
+import plot_info
 from matplotlib._api import suppress_matplotlib_deprecation_warning
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -24,33 +25,7 @@ from invisible_cities.cities.components import sensor_masker
 from invisible_cities.cities.components import calibrate_pmts
 from invisible_cities.cities.components import zero_suppress_wfs
 
-plt.rcParams.update({
-    # Use LaTeX for text rendering
-    "text.usetex": True,
-    "font.family": "serif",
-    "font.serif": ["Computer Modern Roman"],
 
-    # Font sizes (match your LaTeX doc's font size)
-    "font.size": 12*2,
-    "axes.titlesize": 16*2,
-    "axes.labelsize": 14*2,
-    "xtick.labelsize": 12*2,
-    "ytick.labelsize": 12*2,
-    "legend.fontsize": 12*2,
-
-    # Figure size — match LaTeX text width
-    # For A4 with default margins: ~6.3in wide
-    "figure.figsize": (5.9, 5.9),  # golden ratio height
-
-    # Line/marker quality
-    "lines.linewidth": 1.5,
-    "axes.linewidth": 0.8,
-    "xtick.major.width": 0.8,
-    "ytick.major.width": 0.8,
-
-    "savefig.bbox": "tight",
-    "savefig.pad_inches": 0.05,
-})
 
 def raw_plotter(q, evt, pitch = 15.55):
     '''
@@ -78,6 +53,10 @@ def raw_plotter(q, evt, pitch = 15.55):
     plt.show()
 
 def main():
+
+    # setup the style
+    plot_info.apply_style(scale_factor = 1/(1.2))
+
     # setup the functions
     drop_clusters = drop_isolated_clusters([16., 16., 4.], 3, ['Ec', 'E'])
     mask_sens     = sensor_masker('next100', 15281)
@@ -90,25 +69,25 @@ def main():
     data = drop_clusters(data)
     print(data)
 
-    for evt, df in data.groupby('event'):
-        raw_plotter(df, evt)
+    #for evt, df in data.groupby('event'):
+    #   raw_plotter(df, evt)
     with tb.open_file('data/S1_S2_plot/run_15281_0001_ldc1_trg2.waveforms.h5', "r") as h5in:
         rwf_data = h5in.root.RD.pmtrwf
         sipm_data = h5in.root.RD.sipmrwf
         times       = np.arange(0, len(np.sum(rwf_data[0], axis = 0))*25, 25)
-        plt.plot(times, np.sum(rwf_data[2], axis = 0))
-        plt.title('pre deconvolution')
-        plt.show()
+        #plt.plot(times, np.sum(rwf_data[2], axis = 0))
+        #plt.title('pre deconvolution')
+        #plt.show()
         rwf_data = decon_pmt(rwf_data[2])
 
-        plt.plot(times, np.sum(rwf_data, axis = 0))
-        plt.title('post deconvolution ')
-        plt.show()
+        #plt.plot(times, np.sum(rwf_data, axis = 0))
+        #plt.title('post deconvolution ')
+        #plt.show()
 
         rwf_data, ccwfs_maw, cwf_sum, cwf_sum_maw = calib_pmt(rwf_data)
-        plt.plot(times, np.sum(rwf_data, axis = 0))
-        plt.title('post calibration')
-        plt.show()
+        #plt.plot(times, np.sum(rwf_data, axis = 0))
+        #plt.title('post calibration')
+        #plt.show()
 
         rwf_data = np.sum(rwf_data, axis = 0)
         s1_indices, s2_indices = zero_sup(cwf_sum, cwf_sum_maw)
@@ -117,9 +96,9 @@ def main():
         mask = np.zeros_like(rwf_data, dtype=bool)
         mask[np.array(list(indices), dtype = int)] = True
         rwf_data[~mask] = 0
-        plt.plot(times, rwf_data)
-        plt.title('post zero sup')
-        plt.show()
+        #plt.plot(times, rwf_data)
+        #plt.title('post zero sup')
+        #plt.show()
        #import pdb; pdb.set_trace()
         rebin_times, rebin_widths, rebin_wf =  rebin_times_and_waveforms(times, widths = np.tile(25, (len(times), 1)), waveforms = np.array([rwf_data]), rebin_stride = 160)
         #pdb.set_trace()
@@ -137,7 +116,7 @@ def main():
 
 
     # plot both together
-    fig = plt.figure(figsize=(12, 8))
+    fig = plt.figure()
     gs = fig.add_gridspec(1, 2, width_ratios = [1,3], wspace = 0.05)
 
     ax_left = fig.add_subplot(gs[1])
@@ -179,10 +158,10 @@ def main():
         h, l = ax.get_legend_handles_labels()
         handles = h
         labels = l
-    bax.set_ylabel('time (ms)', labelpad=50)
-    bax.set_xlabel('Measured light (a.u)', labelpad = 30)
+    bax.set_ylabel('time (ms)', labelpad=34)
+    bax.set_xlabel('Measured light (a.u)', labelpad = 21)
 
-    bax.legend(handles, labels, loc = 'upper right', fontsize = 16, bbox_to_anchor=(1,1), borderaxespad = 0.2)
+    bax.legend(handles, labels, loc = 'upper right', bbox_to_anchor=(1,0.8), borderaxespad = 0.2)
 
     for ax in bax.axs:
         ax.spines['right'].set_visible(True)

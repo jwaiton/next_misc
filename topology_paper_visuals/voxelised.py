@@ -35,17 +35,17 @@ def _setup_3d_panel(fig, position, view_elev=-25, view_azim=50,
     ax = fig.add_subplot(*position, projection='3d') if isinstance(position, tuple) \
          else fig.add_subplot(position, projection='3d')
 
-    ax.set_xlabel('x (mm)')
-    ax.set_ylabel('y (mm)')
-    ax.set_zlabel('z (mm)')
+    ax.set_xlabel('X (mm)')
+    ax.set_ylabel('Y (mm)')
+    ax.set_zlabel('Z (mm)')
     ax.xaxis.set_ticklabels([])
     ax.yaxis.set_ticklabels([])
     ax.zaxis.set_ticklabels([])
     ax.view_init(view_elev, view_azim)
     ax.set_box_aspect([1, 1, 1])
-    ax.set_zlabel('z (mm)', labelpad=-10)  # push it down/away from the title
-    ax.set_xlabel('x (mm)', labelpad=-10)
-    ax.set_ylabel('y (mm)', labelpad=-10)
+    ax.set_zlabel('Z (mm)', labelpad=-10)  # push it down/away from the title
+    ax.set_xlabel('X (mm)', labelpad=-10)
+    ax.set_ylabel('Y (mm)', labelpad=-10)
 
     if xlim is not None: ax.set_xlim(xlim)
     if ylim is not None: ax.set_ylim(ylim)

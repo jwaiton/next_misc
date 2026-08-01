@@ -27,6 +27,8 @@ def apply_style(scale_factor=1.0):
         "xtick.major.width": 0.6 / scale_factor,
         "ytick.major.width": 0.6 / scale_factor,
         "savefig.dpi": 300,
+        "lines.markersize": 3,
+        "errorbar.capsize": 1.5,
     })
 
 def fixed_axes_figure(nrows=1, ncols=1, ax_width=2.2, ax_height=2.0,
