@@ -7,6 +7,7 @@ jwaiton 160526
 
 import numpy  as np
 import pandas as pd
+import sys
 
 import matplotlib.pyplot as plt
 import zfit
@@ -19,6 +20,9 @@ import fitting_functions   as fitf
 import cutting_functions   as cutf
 import plotting_functions  as plotf
 import error_functions     as errf
+
+sys.path.append('/home/e78368jw/Documents/NEXT_CODE/next_misc/topology_paper_visuals/')
+import plot_info
 
 def build_model(signal_func, background_func, obs, seeds, name_suffix=""):
     '''
@@ -236,69 +240,71 @@ def FOM(data, signal_func, background_func,
 
             # visualise the fit if asked for
             if plot:
+                show_residuals = False # toggle residuals on/off
+
                 sig_ext, bck_ext = model.pdfs
                 x_space = np.linspace(*fitting_info['fit_range'], 200)
                 x_zfit  = zfit.Data.from_numpy(obs = obs, array = x_space)
-
-                fig = plt.figure(figsize=(16, 12))
-                gs  = fig.add_gridspec(2, 1, height_ratios=[3, 1], hspace=0.05)
-                ax_main = fig.add_subplot(gs[0])
-                ax_res  = fig.add_subplot(gs[1], sharex=ax_main)
-
+                
+                if show_residuals:
+                    fig, (ax_main, ax_res) = plot_info.fixed_axes_figure(
+                        2, 1, ax_width=3.2, ax_heights=[2.4, 0.8], hspace=0.05,
+                        left=0.75, right=0.15, top=0.2, bottom=0.55)
+                    ax_res.set_xlim(1.45, 1.75)
+                else:
+                    fig, ax_main = plot_info.fixed_axes_figure(
+                                        1, 1, ax_width=2.2, ax_height=1.7,
+                                        left=0.65, right=0.12, top=0.15, bottom=0.5)
                 counts, bins, patches = ax_main.hist(blob_data['energy'].to_numpy(),
-                                        bins = 200,#fitting_info['bins'],
+                                        bins  = 200,
                                         range = fitting_info['fit_range'],
                                         alpha = 0.6,
                                         label = 'Data')
-                # take scale from first plot, use across all.
                 if i == 0:
                     y_min, y_max = ax_main.get_ylim()
                 else:
                     ax_main.set_ylim([y_min, y_max])
 
-
-                bin_width = (fitting_info['fit_range'][1] - fitting_info['fit_range'][0]) / 200#fitting_info['bins']
-
-                ax_main.plot(x_space, sig_ext.pdf(x_zfit) * ns_total * bin_width, label='Signal', linestyle='dashed')
+                bin_width = (fitting_info['fit_range'][1] - fitting_info['fit_range'][0]) / 200
+                ax_main.plot(x_space, sig_ext.pdf(x_zfit) * ns_total * bin_width, label='Signal',     linestyle='dashed')
                 ax_main.plot(x_space, bck_ext.pdf(x_zfit) * nb_total * bin_width, label='Background')
-
                 full_fit = (sig_ext.pdf(x_zfit) * ns_total + bck_ext.pdf(x_zfit) * nb_total) * bin_width
-
                 ax_main.plot(x_space, full_fit, label='Total', linestyle='dashdot')
-                ax_main.legend()
-                plt.setp(ax_main.get_xticklabels(), visible=False)  # hide top x-axis labels
-
-                # residuals
-                res = (full_fit - counts) / np.sqrt(np.where(counts > 0, counts, 1))
-                ax_res.bar(x_space, res, width = bin_width)
-                ax_res.axhline(0, color='black', linewidth=0.8, linestyle='--')
-                # gridlines
-                ax_res.yaxis.set_major_locator(plt.MultipleLocator(3))
-                ax_res.yaxis.set_minor_locator(plt.MultipleLocator(1))
-                ax_res.grid(axis='y', which='both', linestyle='--', linewidth=0.7, alpha=0.7)
-
-                ax_res.set_ylabel(r'$(f - n)/\sqrt{n}$', fontsize=20)
-                ax_res.set_ylim(-5, 5)          # adjust to taste; ±3 is a common choice
-                ax_res.set_xlabel('Reconstructed Energy (MeV)')
-                # scale factor on data
-                #scale  = (fitting_info['fit_range'][1] - fitting_info['fit_range'][0]) / fitting_info['bins']
-                #plt.plot(x_space, sig_ext.pdf(x_zfit) * ns_total * scale, label = 'Signal', linestyle = 'dashed')
-                #plt.plot(x_space, bck_ext.pdf(x_zfit) * nb_total * scale, label = 'Background')
-                #plt.plot(x_space, (sig_ext.pdf(x_zfit) * ns_total + bck_ext.pdf(x_zfit) * nb_total) * scale, label = 'Total', linestyle = 'dashed')
-                #plt.xlabel('Reconstructed Energy (MeV)')
+                if i == 0:
+                    ax_main.legend(handlelength=0.8,      # line sample length
+                                   handletextpad=0.4,      # gap between sample and label text
+                                   borderpad=0.3,          # padding inside the legend frame
+                                   labelspacing=0.25,      # vertical gap between entries
+                                   columnspacing=0.8)      # horizontal gap, if using ncol
                 ax_main.set_ylabel('Counts')
-                ax_main.set_xlim([1.4, 1.8])
+                ax_main.set_xlim([1.45, 1.75])
+
+                if show_residuals:
+                    plt.setp(ax_main.get_xticklabels(), visible=False)
+                    res = (full_fit - counts) / np.sqrt(np.where(counts > 0, counts, 1))
+                    ax_res.bar(x_space, res, width=bin_width)
+                    ax_res.axhline(0, color='black', linewidth=0.8, linestyle='--')
+                    ax_res.yaxis.set_major_locator(plt.MultipleLocator(3))
+                    ax_res.yaxis.set_minor_locator(plt.MultipleLocator(1))
+                    ax_res.grid(axis='y', which='both', linestyle='--', linewidth=0.7, alpha=0.7)
+                    ax_res.set_ylabel(r'$(f - n)/\sqrt{n}$')
+                    ax_res.set_ylim(-5, 5)
+                    ax_res.set_xlabel('Reconstructed Energy (MeV)')
+                    # chi2
+                    chi2      = np.sum(res**2)
+                    ndof      = len(counts) - len(result.params) # number of degrees of freedom
+                    chi2_ndof = chi2 / ndof
+                    if verbose:
+                        print(f'Chi squared over degrees of freedom: {chi2_ndof}')
+
+
+                else:
+                    ax_main.set_xlabel('Reconstructed Energy (MeV)')
+
                 plt.savefig(f'{output_path}/FOM_fit_{cut:.2f}MeV.pdf')
                 plt.savefig(f'{output_path}/{cut:.2f}MeV.png')
                 plt.show()
-
-                # chi2
-                chi2      = np.sum(res**2)
-                ndof      = len(counts) - len(result.params) # number of degrees of freedom
-                chi2_ndof = chi2 / ndof
-                if verbose:
-                    print(f'Chi squared over degrees of freedom: {chi2_ndof}')
-
+                plt.close(fig)
 
         except Exception as err:
             print("FIT BROKE!")
