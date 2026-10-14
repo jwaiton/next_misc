@@ -42,8 +42,6 @@ plt.show()
 #plt.savefig('plots/numb_hits_close.pdf')
 #plt.show()
 #
-print(f'Minimum number of hits for Kr event: {min(numb_hits)}')
-print(f'Energy for that event: {E_hits[np.argmin(np.array(numb_hits))]:.2f} MeV')
 #
 plt.scatter(numb_hits, E_hits)
 plt.xlabel('Number of hits')
@@ -57,3 +55,11 @@ plt.ylabel('Event energy (MeV)')
 plt.xlim([0, 25])
 plt.ylim([0, 0.25])
 plt.show()
+
+plt.scatter(E_hits*1000, numb_hits/(E_hits*1000))
+plt.xlabel('Event energy (keV)')
+plt.ylabel('Number of hits / Event energy (keV)')
+plt.savefig('plots/hits_over_E.pdf')
+plt.show()
+
+
